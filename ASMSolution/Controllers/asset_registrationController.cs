@@ -172,8 +172,10 @@ namespace ASM_UI.Controllers
 
             if (UserProfile.department_id == 1)
                 pic_asset = 1;
-            else
+            else if (UserProfile.department_id == 2)
                 pic_asset = 2;
+            else
+                pic_asset = 1003;
 
             if (UserProfile.asset_reg_location_id == 2)
             {
