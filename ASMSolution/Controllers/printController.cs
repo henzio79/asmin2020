@@ -183,6 +183,7 @@ namespace ASM_UI.Controllers
                                          asset_id = ar.asset_id,
                                          asset_number = ar.asset_number,
                                          asset_name = ar.asset_name,
+                                         asset_serial_number = ar.asset_serial_number,
                                          category_id = ar.category_id,
                                          //category_name = e.category_name,
                                          department_id = ar.department_id,
@@ -225,7 +226,20 @@ namespace ASM_UI.Controllers
                             arr_content = null;
                         }
                         Array.Resize(ref arr_content, line_no + 1);
-                        arr_content[line_no] = string.Format("{0},{1}", _itm.asset_number, _itm.asset_name.ToUpper());
+                        string _sn = "";
+
+                        if (!string.IsNullOrWhiteSpace(_itm.asset_serial_number))
+                            _sn = _itm.asset_serial_number.ToUpper();
+                        else
+                            _sn = "";
+
+                        if (_sn.Length > 15)                        
+                            _sn = _sn.Substring(0, 15);                        
+
+                        if (!string.IsNullOrEmpty(_sn))
+                            _sn = "SN-" + _sn;
+
+                        arr_content[line_no] = string.Format("{0},{1},{2}", _itm.asset_number.ToUpper(), _itm.asset_name.ToUpper(), _sn);
                         line_no += 1;
                         tmp_location_code = curr_location_code.ToUpper();
                     }
@@ -255,7 +269,7 @@ namespace ASM_UI.Controllers
             }
             finally
             {
-                str_message = checked_asset_id.Length.ToString() + " numbers successfully sent to printer" 
+                str_message = checked_asset_id.Length.ToString() + " numbers successfully sent to printer"
                     + Environment.NewLine + str_file_name;
             }
             return Json(str_message);

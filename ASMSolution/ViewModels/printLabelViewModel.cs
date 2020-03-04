@@ -82,6 +82,10 @@ namespace ASM_UI.Models
         public string Text { get; set; }
         public bool Checked { get; set; }
 
+        [StringLength(50)]
+        public string asset_serial_number { get; set; }
+
+
     }
-        
+
 }
