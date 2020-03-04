@@ -25,6 +25,7 @@ namespace ASM_UI.Models
         [Display(Name = "Mutation Number")]
         public string request_code { get; set; }
 
+        [Display(Name = "Request Date")]
         public DateTime? request_date { get; set; }
 
         public int? request_status { get; set; }
@@ -108,6 +109,8 @@ namespace ASM_UI.Models
         [Display(Name = "Asset Location")]
         //public int? location_id { get; set; }
         public int? current_location_id { get; set; }
+
+        [Display(Name = "Transfer To Location")]
         public string location_name { get; set; }
 
         public virtual ms_asset_location asset_location { get; set; }
@@ -115,13 +118,19 @@ namespace ASM_UI.Models
         [Display(Name = "Department")]
         //public int? department_id { get; set; }
         public int? current_department_id { get; set; }
+
+        [Display(Name = "Transfer To Department")]
         public string department_name { get; set; }
 
         public virtual ms_department department { get; set; }
 
         [Display(Name = "Employee")]
         public int? employee_id { get; set; }
+
+        [Display(Name = "Employee")]
         public int? current_employee_id { get; set; }
+
+        [Display(Name = "Transfer To Employee")]
         public string employee_name { get; set; }
         public string employee_email { get; set; }
         public string ip_address { get; set; }

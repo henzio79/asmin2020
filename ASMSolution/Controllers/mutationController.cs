@@ -124,7 +124,114 @@ namespace ASM_UI.Controllers
             return View(_qry);
         }
 
-        public ActionResult RequestMutation()
+        public JsonResult List()
+        {
+            db.Configuration.ProxyCreationEnabled = false;
+            var _qry = new object();
+
+            if (UserProfile.asset_reg_location_id == 2) //branchs
+            {
+                _qry = (from dr in db.tr_mutation_request
+                        where (dr.fl_active == true && dr.deleted_date == null)
+                        //&& dr.org_id == UserProfile.OrgId
+                        //&& dr.request_dept_id == UserProfile.department_id
+                        //&& dr.request_location_id == UserProfile.location_id
+
+                        join a in db.tr_asset_registration on dr.asset_id equals a.asset_id
+                        where (a.fl_active == true && a.deleted_date == null
+                        && a.company_id == UserProfile.company_id
+                        && a.current_location_id == UserProfile.location_id
+                        )
+
+                        //join b in db.ms_asmin_company on a.company_id equals b.company_id
+                        //where (b.fl_active == true && b.deleted_date == null)
+
+                        join c in db.ms_department on dr.transfer_to_dept_id equals c.department_id
+                        where (c.fl_active == true && c.deleted_date == null)
+
+                        join d in db.ms_employee on dr.transfer_to_emp_id equals d.employee_id
+                        where (d.fl_active == true && d.deleted_date == null)
+
+                        //join e in db.ms_asset_register_location on dr.request_location_id equals e.asset_reg_location_id
+                        //where (e.fl_active == true && e.deleted_date == null)
+
+                        join e in db.ms_asset_location on dr.transfer_to_location_id equals e.location_id
+                        where (e.fl_active == true && e.deleted_date == null)
+
+                        join f in db.ms_request_status on dr.request_status equals f.request_status_id
+
+                        select new AssetMutationViewModel()
+                        {
+                            asset_id = dr.asset_id,
+                            asset_parent = a,
+
+                            request_id = dr.request_id,
+                            request_code = dr.request_code,
+                            request_date = dr.request_date,
+                            request_status_name = f.request_status_name,
+                            fl_approval = dr.fl_approval,
+                            approval_date = dr.approval_date,
+
+                            department_name = c.department_code,
+                            employee_name = d.employee_name,
+                            location_name = e.location_name
+                        }).ToList<AssetMutationViewModel>();
+            }
+            else if (UserProfile.asset_reg_location_id == 1)
+            {
+                _qry = (from dr in db.tr_mutation_request
+                        where (dr.fl_active == true && dr.deleted_date == null)
+                        //&& dr.org_id == UserProfile.OrgId
+                        //&& dr.request_dept_id == UserProfile.department_id
+                        //&& dr.request_location_id == UserProfile.location_id
+
+                        join a in db.tr_asset_registration on dr.asset_id equals a.asset_id
+                        where (a.fl_active == true && a.deleted_date == null
+                        && a.company_id == UserProfile.company_id
+                        //&& a.current_location_id == UserProfile.location_id
+                        )
+
+                        //join b in db.ms_asmin_company on a.company_id equals b.company_id
+                        //where (b.fl_active == true && b.deleted_date == null)
+
+                        join c in db.ms_department on dr.transfer_to_dept_id equals c.department_id
+                        where (c.fl_active == true && c.deleted_date == null)
+
+                        join d in db.ms_employee on dr.transfer_to_emp_id equals d.employee_id
+                        where (d.fl_active == true && d.deleted_date == null)
+
+                        //join e in db.ms_asset_register_location on dr.request_location_id equals e.asset_reg_location_id
+                        //where (e.fl_active == true && e.deleted_date == null)
+
+                        join e in db.ms_asset_location on dr.transfer_to_location_id equals e.location_id
+                        where (e.fl_active == true && e.deleted_date == null)
+
+                        join f in db.ms_request_status on dr.request_status equals f.request_status_id
+
+                        select new AssetMutationViewModel()
+                        {
+                            asset_id = dr.asset_id,
+                            asset_number = a.asset_number,
+                            asset_name = a.asset_name,
+
+                            request_id = dr.request_id,
+                            request_code = dr.request_code,
+                            request_date = dr.request_date,
+                            request_status_name = f.request_status_name,
+                            fl_approval = dr.fl_approval,
+                            approval_date = dr.approval_date,
+
+                            department_name = c.department_code,
+                            employee_name = d.employee_name,
+                            location_name = e.location_name
+                        }).ToList<AssetMutationViewModel>();
+            }
+
+            return Json(new { data = _qry }, JsonRequestBehavior.AllowGet);
+        
+        }
+
+            public ActionResult RequestMutation()
         {
             AssetMutationViewModel mutation_req = new AssetMutationViewModel()
             {
