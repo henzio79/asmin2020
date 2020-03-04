@@ -222,7 +222,7 @@ namespace ASM_UI.Controllers
         /// <summary>
         /// data untuk employee modal, 
         /// 
-        /// tampilkan hanya yang belum memiliki use id. user id yang di nonaktifkan, 
+        /// satu employee bisa memiiki lebih satu user id. jadi tampilkan semua Employee di modal supaya bisa dipilih lagi
         /// masi bisa dipakai tinggal akifkan lagi aja
         /// </summary>
         /// <param name="id"></param>
