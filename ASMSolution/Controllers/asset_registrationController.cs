@@ -181,9 +181,9 @@ namespace ASM_UI.Controllers
             {
                 query_result = (from ar in db.tr_asset_registration
                                 where (ar.fl_active == true && ar.deleted_date == null
-                                && ar.company_id == UserProfile.company_id                                
-                                && ar.current_location_id == UserProfile.location_id        
-                                && ar.asset_reg_pic_id == pic_asset                       
+                                && ar.company_id == UserProfile.company_id
+                                && ar.current_location_id == UserProfile.location_id
+                                && ar.asset_reg_pic_id == pic_asset
                                 && ar.asset_type_id == (int)Enum_asset_type_Key.AssetParent)
 
                                 join a in db.ms_vendor on ar.vendor_id equals a.vendor_id
@@ -819,16 +819,31 @@ Rincian :
             //asset_reg.employee_list = db.ms_employee.Where(r => r.fl_active == true && r.deleted_date == null).Select(e => new ms_employee { employee_id = e.employee_id, employee_name = "[" + e.employee_nik + "] - " + e.employee_name, employee_email = e.employee_email }).ToList();
             if (asset_reg.department_id != 0 || asset_reg.department_id != null)
             {
-                var emp_list = from t1 in db.ms_employee
-                               join t2 in db.ms_employee_detail on t1.employee_id equals t2.employee_id
-                               where t2.department_id == asset_reg.department_id && t1.deleted_date == null && t1.fl_active == true
-                               select new ms_employee()
-                               {
-                                   employee_id = t1.employee_id,
-                                   employee_name = "[" + t1.employee_nik + "] - " + t1.employee_name,
-                                   employee_email = t1.employee_email
-                               };
-                asset_reg.employee_list = emp_list.ToList();
+                var emp_list = (from t1 in db.ms_employee
+                                join t2 in db.ms_employee_detail on t1.employee_id equals t2.employee_id
+                                where t2.department_id == asset_reg.department_id && t1.deleted_date == null
+                                && t1.fl_active == true
+                                && t2.company_id == UserProfile.company_id
+                                select new
+                                {
+                                    t1.employee_id,
+                                    t1.employee_nik,
+                                    t1.employee_name,
+                                    t1.employee_email
+                                }).ToList();
+
+                if (emp_list != null)
+                {
+                    asset_reg.employee_list = (emp_list.Select(x => new ms_employee()
+                    {
+                        employee_id = x.employee_id,
+                        employee_name = "[" + x.employee_nik + "] - " + x.employee_name,
+                        employee_email = x.employee_email
+                    })).ToList<ms_employee>();
+                }
+                else
+                    asset_reg.employee_list = null;
+
             }
             else
                 asset_reg.employee_list = db.ms_employee.Where(r => r.fl_active == true && r.deleted_date == null).Select(e => new ms_employee { employee_id = e.employee_id, employee_name = "[" + e.employee_nik + "] - " + e.employee_name, employee_email = e.employee_email }).ToList();
@@ -1005,7 +1020,7 @@ Rincian :
                         ass_reg.vendor_id = asset_reg.vendor_id;
                         ass_reg.asset_description = asset_reg.asset_description;
                         ass_reg.asset_receipt_date = asset_reg.asset_receipt_date;
-                        
+
                         //ass_reg.location_id = asset_reg.location_id;
                         //ass_reg.department_id = asset_reg.department_id;
                         //ass_reg.employee_id = asset_reg.employee_id;
