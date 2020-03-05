@@ -526,7 +526,7 @@ namespace ASM_UI.Controllers
                                         ip_address = c.ip_address
                                     }).ToList<AssetMutationViewModel>();
 
-                        if (_qry != null)
+                        if (_qry != null && _qry.Count>0)
                         {
                             foreach (AssetMutationViewModel refApproval in _qry)
                             {
@@ -551,6 +551,7 @@ namespace ASM_UI.Controllers
                                 db.SaveChanges();
                             }
                         }
+                        
                         //Check KTT
 
                         //check range approval
@@ -694,54 +695,59 @@ namespace ASM_UI.Controllers
                             }
                         }
 
-                        #region "kirim email ke approval level 1"
-                        sy_email_log sy_email_log = new sy_email_log();
-                        sy_email_log.elog_to = _qry.FirstOrDefault().employee_email;
-                        sy_email_log.elog_subject = string.Format("Asset Mutation Need Approval");
-                        sy_email_log.elog_template = "EMAIL_TEMPLATE_02";
-
-                        #region "body mail"
-                        var _bodymail = app_setting.APPLICATION_SETTING.Where(c => c.app_key.Contains("EMAIL_TEMPLATE_02"));
-                        string strBodyMail = _bodymail.FirstOrDefault().app_value;
-                        strBodyMail = strBodyMail.Replace("[to]", _qry.FirstOrDefault().employee_name);
-                        strBodyMail = strBodyMail.Replace("[assetnumber]", mutation_req.asset_number);
-                        strBodyMail = strBodyMail.Replace("[assetname]", mutation_req.asset_name);
-                        strBodyMail = strBodyMail.Replace("[assetlocation]", mutation_req.location_name);
-                        strBodyMail = strBodyMail.Replace("[department]", mutation_req.department_name);
-                        strBodyMail = strBodyMail.Replace("[employee]", mutation_req.employee_name);
-                        //strBodyMail = strBodyMail.Replace("[link]", "");
-                        sy_email_log.elog_body = strBodyMail;
-                        #endregion
-
-                        var EmailHelper = new EmailHelper()
+                        if (_qry != null && _qry.Count > 0)
                         {
-                            ToAddress = sy_email_log.elog_to,
-                            Email_Template = sy_email_log.elog_template,
-                            MailSubject = sy_email_log.elog_subject,
-                            MailBody = sy_email_log.elog_body
-                        };
-                        EmailHelper.Send();
-                        #endregion
+                            #region "kirim email ke approval level 1"
+                            sy_email_log sy_email_log = new sy_email_log();
+                            sy_email_log.elog_to = _qry.FirstOrDefault().employee_email;
+                            sy_email_log.elog_subject = string.Format("Asset Mutation Need Approval");
+                            sy_email_log.elog_template = "EMAIL_TEMPLATE_02";
 
-                        #region "Save Sy_Message_notification ke approval"
-                        int empid = Convert.ToInt32(_qry.FirstOrDefault().current_employee_id);
-                        ms_user msuser = (from m in db.ms_user
-                                          where m.employee_id == empid
-                                          select m).FirstOrDefault();
+                            #region "body mail"
+                            var _bodymail = app_setting.APPLICATION_SETTING.Where(c => c.app_key.Contains("EMAIL_TEMPLATE_02"));
+                            string strBodyMail = _bodymail.FirstOrDefault().app_value;
+                            strBodyMail = strBodyMail.Replace("[to]", _qry.FirstOrDefault().employee_name);
+                            strBodyMail = strBodyMail.Replace("[assetnumber]", mutation_req.asset_number);
+                            strBodyMail = strBodyMail.Replace("[assetname]", mutation_req.asset_name);
+                            strBodyMail = strBodyMail.Replace("[assetlocation]", mutation_req.location_name);
+                            strBodyMail = strBodyMail.Replace("[department]", mutation_req.department_name);
+                            strBodyMail = strBodyMail.Replace("[employee]", mutation_req.employee_name);
+                            //strBodyMail = strBodyMail.Replace("[link]", "");
+                            sy_email_log.elog_body = strBodyMail;
+                            #endregion
 
-                        sy_message_notification msg = new sy_message_notification();
-                        msg.notif_group = "BALOON_RECEIPT_03";
-                        msg.notify_user = msuser.user_name;
-                        msg.notify_ip = _qry.FirstOrDefault().ip_address;
-                        msg.notify_message = "Ada permintaan approval untuk asset mutasi.";
-                        msg.fl_active = true;
-                        msg.created_date = DateTime.Now;
-                        msg.created_by = UserProfile.UserId;
-                        msg.fl_shown = 0;
+                            var EmailHelper = new EmailHelper()
+                            {
+                                ToAddress = sy_email_log.elog_to,
+                                Email_Template = sy_email_log.elog_template,
+                                MailSubject = sy_email_log.elog_subject,
+                                MailBody = sy_email_log.elog_body
+                            };
+                            EmailHelper.Send();
+                            #endregion
 
-                        db.sy_message_notification.Add(msg);
-                        db.SaveChanges();
-                        #endregion
+
+                            #region "Save Sy_Message_notification ke approval"
+                            int empid = Convert.ToInt32(_qry.FirstOrDefault().current_employee_id);
+                            ms_user msuser = (from m in db.ms_user
+                                              where m.employee_id == empid
+                                              select m).FirstOrDefault();
+
+                            sy_message_notification msg = new sy_message_notification();
+                            msg.notif_group = "BALOON_RECEIPT_03";
+                            msg.notify_user = msuser.user_name;
+                            msg.notify_ip = _qry.FirstOrDefault().ip_address;
+                            msg.notify_message = "Ada permintaan approval untuk asset mutasi.";
+                            msg.fl_active = true;
+                            msg.created_date = DateTime.Now;
+                            msg.created_by = UserProfile.UserId;
+                            msg.fl_shown = 0;
+
+                            db.sy_message_notification.Add(msg);
+                            db.SaveChanges();
+                            #endregion
+
+                        }
 
                         transaction.Commit();
 

@@ -90,15 +90,21 @@ namespace ASM_UI.Models
         public virtual ms_currency ms_currency { get; set; }
 
         [Display(Name = "Price")]
-        [DisplayFormat(DataFormatString = "{0:n}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:n2}", ApplyFormatInEditMode = true)]
+        //[RegularExpression(@"^\d+\.\d{0,2}$")]
+        [DataType(DataType.Currency)]
         public decimal? asset_original_value { get; set; }
 
         [Display(Name = "Asset Value (in USD)")]
-        [DisplayFormat(DataFormatString = "{0:n}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:n2}", ApplyFormatInEditMode = true)]
+        //[RegularExpression(@"^\d+\.\d{0,2}$")]
+        [DataType(DataType.Currency)]
         public decimal? asset_book_value { get; set; }
 
         [Display(Name = "Kurs")]
-        [DisplayFormat(DataFormatString = "{0:n}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:n2}", ApplyFormatInEditMode = true)]
+        //[RegularExpression(@"^\d+\.\d{0,2}$")]
+        [DataType(DataType.Currency)]
         public decimal? currency_kurs { get; set; }
 
         [Display(Name = "Company")]
@@ -206,6 +212,8 @@ namespace ASM_UI.Models
         //public string location_name { get; set; }
         //public string department_name { get; set; }
         //public string employee_name { get; set; }
+
+
     }
 
     public class mutationappViewModel
@@ -244,4 +252,6 @@ namespace ASM_UI.Models
 
         public string approval_suggestion_name { get; set; }
     }
+
+
 }

@@ -33,5 +33,12 @@ namespace ASM_UI
         {
             return (value ?? string.Empty).Replace("-", string.Empty);
         }
+
+        public static string ToCurrencyString(this decimal d)
+        {
+            decimal t = Decimal.Truncate(d);
+            return d.Equals(t) ? d.ToString("0.##") : d.ToString("#,##0.00");
+        }
+
     }
 }
