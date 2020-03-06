@@ -485,7 +485,7 @@ namespace ASM_UI.Controllers
                         int count = 1;
                         int approval_id = 0;
 
-                        if (_qry != null)
+                        if (_qry != null && _qry.Count > 0)
                         {
                             foreach (disposalViewModel refApproval in _qry)
                             {
@@ -543,7 +543,7 @@ namespace ASM_UI.Controllers
                         int count_ktt = 1;
                         int approval_id_ktt = 0;
 
-                        if (_qry_ktt != null)
+                        if (_qry_ktt != null && _qry_ktt.Count > 0)
                         {
                             foreach (disposalViewModel refApproval in _qry_ktt)
                             {
@@ -604,7 +604,7 @@ namespace ASM_UI.Controllers
                         int count_bod = 1;
                         int approval_id_bod = 0;
 
-                        if (_qry_ktt != null)
+                        if (_qry_ktt != null && _qry_ktt.Count>0)
                         {
                             foreach (disposalViewModel refApproval in _qry_bod)
                             {
@@ -664,61 +664,64 @@ namespace ASM_UI.Controllers
                         }
                         #endregion
 
-                        #region "kirim email ke approval level 1"
-                        sy_email_log sy_email_log = new sy_email_log();
-                        sy_email_log.elog_to = _qry.FirstOrDefault().employee_email;
-                        sy_email_log.elog_subject = string.Format("Asset Disposal Need Approval");
-                        sy_email_log.elog_template = "EMAIL_TEMPLATE_04";
-
-                        var _bodymail = app_setting.APPLICATION_SETTING.Where(c => c.app_key.Contains("EMAIL_TEMPLATE_04"));
-                        string strBodyMail = _bodymail.FirstOrDefault().app_value;
-                        strBodyMail = strBodyMail.Replace("[to]", _qry.FirstOrDefault().employee_name);
-                        strBodyMail = strBodyMail.Replace("[action]", "Dispose");
-                        strBodyMail = strBodyMail.Replace("[assetnumber]", disposal_req.asset_number);
-                        strBodyMail = strBodyMail.Replace("[aseetname]", disposal_req.asset_name);
-                        strBodyMail = strBodyMail.Replace("[assetlocation]", disposal_req.location_name);
-                        strBodyMail = strBodyMail.Replace("[department]", disposal_req.department_name);
-
-                        int empid = Convert.ToInt32(_qry.FirstOrDefault().employee_id);
-                        ms_user msuser = (from m in db.ms_user
-                                          where m.employee_id == empid
-                                          select m).FirstOrDefault();
-
-                        //token untuk link approval di email
-                        string token = string.Format("DisposalApproval|Approval/{0}|{1}|{2}|{3}", approval_id, msuser.user_name, UserProfile.company_id, UserProfile.asset_reg_location_id);
-                        token = CryptorHelper.Encrypt(token, "MD5", true).Replace("+", "plus").Replace("=", "equal");
-                        string linkapp = string.Format("{0}://{1}{2}", Request.Url.Scheme, Request.Url.Authority, Url.Content("~/Account/Login?ReturnUrl=%2f&token=" + token));
-                        string strImg = string.Format("http://{0}/Content/EmailImage/button_approval_disposal.png", Request.Url.Authority);
-
-                        linkapp = string.Format(@"<a href={0}><img src=""{1}"" alt=""click for approval""/></a>", linkapp, strImg);
-
-                        strBodyMail = strBodyMail.Replace("[link]", linkapp);
-                        sy_email_log.elog_body = strBodyMail;
-
-                        var EmailHelper = new EmailHelper()
+                        if (_qry != null && _qry.Count > 0)
                         {
-                            ToAddress = sy_email_log.elog_to,
-                            Email_Template = sy_email_log.elog_template,
-                            MailSubject = sy_email_log.elog_subject,
-                            MailBody = sy_email_log.elog_body
-                        };
-                        EmailHelper.Send();
-                        #endregion
+                            #region "kirim email ke approval level 1"
+                            sy_email_log sy_email_log = new sy_email_log();
+                            sy_email_log.elog_to = _qry.FirstOrDefault().employee_email;
+                            sy_email_log.elog_subject = string.Format("Asset Disposal Need Approval");
+                            sy_email_log.elog_template = "EMAIL_TEMPLATE_04";
 
-                        #region "Save Sy_Message_notification"
-                        sy_message_notification msg = new sy_message_notification();
-                        msg.notif_group = "BALOON_RECEIPT_04";
-                        msg.notify_user = msuser.user_name;
-                        msg.notify_ip = _qry.FirstOrDefault().ip_address;
-                        msg.notify_message = "Ada permintaan approval untuk Asset disposal.";
-                        msg.fl_active = true;
-                        msg.created_date = DateTime.Now;
-                        msg.created_by = UserProfile.UserId;
-                        msg.fl_shown = 0;
+                            var _bodymail = app_setting.APPLICATION_SETTING.Where(c => c.app_key.Contains("EMAIL_TEMPLATE_04"));
+                            string strBodyMail = _bodymail.FirstOrDefault().app_value;
+                            strBodyMail = strBodyMail.Replace("[to]", _qry.FirstOrDefault().employee_name);
+                            strBodyMail = strBodyMail.Replace("[action]", "Dispose");
+                            strBodyMail = strBodyMail.Replace("[assetnumber]", disposal_req.asset_number);
+                            strBodyMail = strBodyMail.Replace("[aseetname]", disposal_req.asset_name);
+                            strBodyMail = strBodyMail.Replace("[assetlocation]", disposal_req.location_name);
+                            strBodyMail = strBodyMail.Replace("[department]", disposal_req.department_name);
 
-                        db.sy_message_notification.Add(msg);
-                        db.SaveChanges();
-                        #endregion
+                            int empid = Convert.ToInt32(_qry.FirstOrDefault().employee_id);
+                            ms_user msuser = (from m in db.ms_user
+                                              where m.employee_id == empid
+                                              select m).FirstOrDefault();
+
+                            //token untuk link approval di email
+                            string token = string.Format("DisposalApproval|Approval/{0}|{1}|{2}|{3}", approval_id, msuser.user_name, UserProfile.company_id, UserProfile.asset_reg_location_id);
+                            token = CryptorHelper.Encrypt(token, "MD5", true).Replace("+", "plus").Replace("=", "equal");
+                            string linkapp = string.Format("{0}://{1}{2}", Request.Url.Scheme, Request.Url.Authority, Url.Content("~/Account/Login?ReturnUrl=%2f&token=" + token));
+                            string strImg = string.Format("http://{0}/Content/EmailImage/button_approval_disposal.png", Request.Url.Authority);
+
+                            linkapp = string.Format(@"<a href={0}><img src=""{1}"" alt=""click for approval""/></a>", linkapp, strImg);
+
+                            strBodyMail = strBodyMail.Replace("[link]", linkapp);
+                            sy_email_log.elog_body = strBodyMail;
+
+                            var EmailHelper = new EmailHelper()
+                            {
+                                ToAddress = sy_email_log.elog_to,
+                                Email_Template = sy_email_log.elog_template,
+                                MailSubject = sy_email_log.elog_subject,
+                                MailBody = sy_email_log.elog_body
+                            };
+                            EmailHelper.Send();
+                            #endregion
+
+                            #region "Save Sy_Message_notification"
+                            sy_message_notification msg = new sy_message_notification();
+                            msg.notif_group = "BALOON_RECEIPT_04";
+                            msg.notify_user = msuser.user_name;
+                            msg.notify_ip = _qry.FirstOrDefault().ip_address;
+                            msg.notify_message = "Ada permintaan approval untuk Asset disposal.";
+                            msg.fl_active = true;
+                            msg.created_date = DateTime.Now;
+                            msg.created_by = UserProfile.UserId;
+                            msg.fl_shown = 0;
+
+                            db.sy_message_notification.Add(msg);
+                            db.SaveChanges();
+                            #endregion
+                        }
 
                         transaction.Commit();
 

@@ -40,7 +40,7 @@
                         <!-- widget content -->
                         <div class="widget-body no-padding">
 
-                            @using (Html.BeginForm("RequestDisposal", "disposal", FormMethod.Post, htmlAttributes: new { @class = "smart-form", enctype = "multipart/form-data" }))
+                            @using (Html.BeginForm("RequestDisposal", "disposal", FormMethod.Post, htmlAttributes: new { id = "disposal-form", @class = "smart-form", enctype = "multipart/form-data" }))
                             {
                                 <header>
                                     Disposal Request Form
@@ -53,7 +53,7 @@
                                         @Html.ValidationSummary(true, "", new { @class = "text-danger" })
                                         <br />
 
-                                        <section>    
+                                        <section>
                                             <div class="row">
                                                 <div class="col-md-1">
                                                 </div>
@@ -279,7 +279,9 @@
 
 @section pagespecific {
     <script type="text/javascript">
+
         function GetAssetNumber(id) {
+
             $('#CancelBtn').prop('disabled', true);
 
             $.ajax({
@@ -301,9 +303,30 @@
                         $("#parent_asset_name").val(data[i].asset_name);
                         $("#parent_asset_receiptdate").val(date);
                         $("#currencycode").val(data[i].currency_code);
-                        $("#bookvalue").val(data[i].asset_book_value);
-                        $("#kurs").val(data[i].Currency_kurs);
-                        $("#assetvalue").val(data[i].asset_original_value);
+                        $("#bookvalue").autoNumeric("init", {
+                            aSep: ',',
+                            aDec: '.',
+                            aPad: false,
+                            mDec: '2',
+                            vMin: 0,
+                        });
+                        $("#bookvalue").autoNumeric("set", data[i].asset_book_value);
+                        $("#kurs").autoNumeric("init", {
+                            aSep: ',',
+                            aDec: '.',
+                            aPad: false,
+                            mDec: '2',
+                            vMin: 0,
+                        });
+                        $("#kurs").autoNumeric("set", data[i].Currency_kurs);
+                        $("#assetvalue").autoNumeric("init", {
+                            aSep: ',',
+                            aDec: '.',
+                            aPad: false,
+                            mDec: '2',
+                            vMin: 0,
+                        });
+                        $("#assetvalue").autoNumeric("set", data[i].asset_original_value);
                         $("#locationid").val(data[i].location_id);
                         $("#locationname").val(data[i].location_name);
                         $("#departmentname").val(data[i].department_name);
@@ -326,8 +349,11 @@
                 }
             })
         }
+
         function OpenModalAssetList() {
+
             $("#Asset").html("");
+
             var assetCode = $("#assetCodeID").val();
             //alert("modal");
 
@@ -358,6 +384,51 @@
                 }
             });
         }
+
+        $(document).ready(function () {
+
+            $("body").on("submit", "#disposal-form", function () {
+
+                $.each($('#assetvalue'), function () {
+                    if ($(this).val()) {
+                        var _val = $(this).val();
+                        //console.log(_val);
+                        var _valValue = _val.replace(/[,.]/g, m => (m === ',' ? '.' : ''));
+                        //console.log(parseFloat(_valValue));
+                        $(this).val(_valValue);
+                        //console.log('assetvalue=' + $(this).val());
+                        //debugger
+                    }
+                });
+
+                //$.each($('#kurs'), function () {
+                //    if ($(this).val()) {
+                //        var _val = $(this).val();
+                //        //console.log(_val);
+                //        var _valValue = _val.replace(/[,.]/g, m => (m === ',' ? '.' : ''));
+                //        //console.log(parseFloat(_valValue));
+                //        $(this).val(_valValue);
+                //        //console.log('kurs=' + $(this).val());
+                //        //debugger
+                //    }
+                //});
+
+                //$.each($('#bookvalue'), function () {
+                //    if ($(this).val()) {
+                //        var _val = $(this).val();
+                //        //console.log(_val);
+                //        var _valValue = _val.replace(/[,.]/g, m => (m === ',' ? '.' : ''));
+                //        //console.log(parseFloat(_valValue));
+                //        $(this).val(_valValue);
+                //        //console.log('bookvalue=' + $(this).val());
+                //        //debugger
+                //    }
+                //});
+
+                //return confirm("Do you want to submit?");s
+            });
+
+        });
 
     </script>
 }

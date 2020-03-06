@@ -37,7 +37,7 @@
 
                             </div>
                             <div class="widget-body no-padding">
-                                @using (Html.BeginForm("request", "mutation", FormMethod.Post, htmlAttributes: new { id="mutation-form", @class = "smart-form", enctype = "multipart/form-data" }))
+                                @using (Html.BeginForm("request", "mutation", FormMethod.Post, htmlAttributes: new { id = "mutation-form", @class = "smart-form", enctype = "multipart/form-data" }))
                                 {
                                     @*<form id="mutation-form" class="smart-form">*@
                                     <header>
@@ -543,7 +543,7 @@
                     if ($(this).val()) {
                         var _val = $(this).val();
                         //console.log(_val);
-                        var _valValue = _val.replace(/[,.]/g, m => (m === ',' ? '.' : '')); 
+                        var _valValue = _val.replace(/[,.]/g, m => (m === ',' ? '.' : ''));
                         //console.log(parseFloat(_valValue));
                         $(this).val(_valValue);
                         //console.log('assetvalue=' + $(this).val());
@@ -555,7 +555,7 @@
                 //    if ($(this).val()) {
                 //        var _val = $(this).val();
                 //        //console.log(_val);
-                //        var _valValue = _val.replace(/[,.]/g, m => (m === ',' ? '.' : '')); 
+                //        var _valValue = _val.replace(/[,.]/g, m => (m === ',' ? '.' : ''));
                 //        //console.log(parseFloat(_valValue));
                 //        $(this).val(_valValue);
                 //        //console.log('kurs=' + $(this).val());
@@ -567,7 +567,7 @@
                 //    if ($(this).val()) {
                 //        var _val = $(this).val();
                 //        //console.log(_val);
-                //        var _valValue = _val.replace(/[,.]/g, m => (m === ',' ? '.' : '')); 
+                //        var _valValue = _val.replace(/[,.]/g, m => (m === ',' ? '.' : ''));
                 //        //console.log(parseFloat(_valValue));
                 //        $(this).val(_valValue);
                 //        //console.log('bookvalue=' + $(this).val());
@@ -604,7 +604,10 @@
             });
         }
 
-
+            /*
+            * https://stackoverflow.com/questions/10741190/currency-formatting-mvc?noredirect=1&lq=1
+            */
 
     </script>
 }
+

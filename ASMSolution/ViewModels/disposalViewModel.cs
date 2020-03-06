@@ -89,15 +89,18 @@ namespace ASM_UI.Models
         public virtual ms_currency ms_currency { get; set; }
 
         [Display(Name = "Price")]
-        [DisplayFormat(DataFormatString = "{0:n}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:n2}", ApplyFormatInEditMode = true)]
+        [DataType(DataType.Currency)]
         public decimal? asset_book_value { get; set; }
 
         [Display(Name = "Kurs")]
-        [DisplayFormat(DataFormatString = "{0:n}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:n2}", ApplyFormatInEditMode = true)]
+        [DataType(DataType.Currency)]
         public decimal? Currency_kurs { get; set; }
 
         [Display(Name = "Asset Value")]
-        [DisplayFormat(DataFormatString = "{0:n}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:n2}", ApplyFormatInEditMode = true)]
+        [DataType(DataType.Currency)]
         public decimal? asset_original_value { get; set; }
 
         [Display(Name = "Company")]
