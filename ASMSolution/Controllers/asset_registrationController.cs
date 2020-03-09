@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
-using System.Data;
+//using System.Data;
 using System.Data.Entity;
 using System.Linq;
 using System.Net;
@@ -12,6 +12,7 @@ using ZXing;
 using System.Drawing;
 using System.Drawing.Imaging;
 using ASM_UI.App_Helpers;
+using System.Threading.Tasks;
 
 namespace ASM_UI.Controllers
 {
@@ -167,15 +168,76 @@ namespace ASM_UI.Controllers
         public JsonResult List()
         {
             db.Configuration.ProxyCreationEnabled = false;
-            var query_result = new object();
-            int pic_asset = 0;
+            IEnumerable<asset_registrationViewModel> query_result = null;
 
-            if (UserProfile.department_id == 1)
-                pic_asset = 1;
-            else if (UserProfile.department_id == 2)
-                pic_asset = 2;
-            else
-                pic_asset = 1003;
+            int pic_asset = (int)UserProfile.department_id;
+            /*
+             Pertanyaan Requirement :
+             1. apakah pengertian departement asset = departement employee ?
+             2. jika PIC asset hanya 3 dept it (IT, GA, dan OPS), jika ada user legal di kasih login, apakah login org legal tsb bisa melihat asset departementnya (legal) ?
+                 - siapa yang akan entri asset departement legal ?
+             */
+
+            //if (UserProfile.department_id == 1)
+            //    pic_asset = 1;
+            //else if (UserProfile.department_id == 2)
+            //    pic_asset = 2;
+            //else
+            //    pic_asset = 1003;
+
+            #region Mengenai Asset Disposal
+            /* disposal has been done*/
+            var disposal_done_approval = (from c in db.tr_disposal_approval
+                                          where (c.approval_date != null && c.fl_active == true && c.deleted_date == null)
+                                          group c by c.request_id into g
+                                          select new
+                                          {
+                                              request_id = g.Key,
+                                              approval_id = g.Max(a => a.approval_id)
+                                          }).ToList();
+            var disposal_done = (from a in disposal_done_approval
+                                 join b in db.tr_disposal_approval on a.approval_id equals b.approval_id
+                                 join c in db.tr_disposal_request on b.request_id equals c.request_id
+                                 select new LastApprovalDTO
+                                 {
+                                     assset_id = (int)c.asset_id,
+                                     request_id = b.request_id,
+                                     approval_id = b.approval_id,
+                                     approval_suggestion_id = b.approval_suggestion_id,
+                                     approval_status_id = b.approval_status_id,
+                                     approval_level_id = b.approval_level_id,
+                                     approval_date = b.approval_date
+                                 }).ToList<LastApprovalDTO>();
+
+            List<int> _disposal_asset_id = (from d in disposal_done
+                                          where d.approval_date != null
+                                          select d.assset_id).DefaultIfEmpty<int>().ToList();
+
+            /* jika ada asset yg sedang di disposal : maka tampilkan status disposal pada list asset registration */
+            var disposal_proposed_approval = (from c in db.tr_disposal_approval
+                                              where (c.approval_date == null && c.fl_active == true && c.deleted_date == null)
+                                              group c by c.request_id into g
+                                              select new
+                                              {
+                                                  request_id = g.Key,
+                                                  approval_id = g.Max(a => a.approval_id)
+                                              }).ToList();
+
+            var disposal_proposed = (from a in disposal_proposed_approval
+                                     join b in db.tr_disposal_approval on a.approval_id equals b.approval_id
+                                     join c in db.tr_disposal_request on b.request_id equals c.request_id
+                                     select new LastApprovalDTO
+                                     {
+                                         assset_id = (int)c.asset_id,
+                                         request_id = b.request_id,
+                                         approval_id = b.approval_id,
+                                         approval_suggestion_id = b.approval_suggestion_id,
+                                         approval_status_id = b.approval_status_id,
+                                         approval_level_id = b.approval_level_id,
+                                         approval_date = b.approval_date
+                                     }).ToList<LastApprovalDTO>();
+
+            #endregion
 
             if (UserProfile.asset_reg_location_id == 2)
             {
@@ -184,7 +246,8 @@ namespace ASM_UI.Controllers
                                 && ar.company_id == UserProfile.company_id
                                 && ar.current_location_id == UserProfile.location_id
                                 && ar.asset_reg_pic_id == pic_asset
-                                && ar.asset_type_id == (int)Enum_asset_type_Key.AssetParent)
+                                && ar.asset_type_id == (int)Enum_asset_type_Key.AssetParent
+                                && !_disposal_asset_id.Contains(ar.asset_id)) //jika asset sudah di-disposal, maka jangan tampilkan lagi---------------
 
                                 join a in db.ms_vendor on ar.vendor_id equals a.vendor_id
                                 where (a.fl_active == true && a.deleted_date == null)
@@ -241,16 +304,20 @@ namespace ASM_UI.Controllers
                                     department = g,
                                     employee_id = ar.employee_id,
                                     employee = h,
-                                    asset_description = ar.asset_description
+                                    asset_description = ar.asset_description,
+                                    asset_disposal_status = "" //(ar2 == null) ? string.Empty : "<strong>Disposal Proposed</strong>"
+
                                 }).ToList<asset_registrationViewModel>();
+
             }
             else if (UserProfile.asset_reg_location_id == 1)
             {
-                query_result = (from ar in db.tr_asset_registration
+                query_result = (from ar in db.tr_asset_registration.ToList()
                                 where (ar.fl_active == true && ar.deleted_date == null
                                 && ar.company_id == UserProfile.company_id
                                 && ar.asset_reg_pic_id == pic_asset
-                                && ar.asset_type_id == (int)Enum_asset_type_Key.AssetParent)
+                                && ar.asset_type_id == (int)Enum_asset_type_Key.AssetParent
+                                && !_disposal_asset_id.Contains(ar.asset_id))   //jika asset sudah di-disposal, maka jangan tampilkan lagi---------------
 
                                 join a in db.ms_vendor on ar.vendor_id equals a.vendor_id
                                 where (a.fl_active == true && a.deleted_date == null)
@@ -278,6 +345,11 @@ namespace ASM_UI.Controllers
 
                                 join i in db.ms_asset_location on ar.location_id equals i.location_id
                                 where (i.fl_active == true && i.deleted_date == null)
+
+                                join dispo in disposal_proposed.ToList<LastApprovalDTO>() on ar.asset_id equals dispo.assset_id
+                                into ar_dispo_joined
+                                from ar1 in ar_dispo_joined.DefaultIfEmpty()
+                                from ar2 in disposal_proposed.Where(rec_dis => (rec_dis == null) ? false : rec_dis.assset_id == ar1.assset_id).DefaultIfEmpty()
 
                                 select new asset_registrationViewModel()
                                 {
@@ -307,10 +379,54 @@ namespace ASM_UI.Controllers
                                     department = g,
                                     employee_id = ar.employee_id,
                                     employee = h,
-                                    asset_description = ar.asset_description
+                                    asset_description = ar.asset_description,
+                                    asset_disposal_status = (ar2 == null) ? string.Empty : "Disposal Proposed"
+
                                 }).ToList<asset_registrationViewModel>();
             }
-            return Json(new { data = query_result }, JsonRequestBehavior.AllowGet);
+
+            //int _count = query_result.ToList<asset_registrationViewModel>().Count;
+            //int _count_dis = disposal_proposed.ToList<LastApprovalDTO>().Count;
+
+            var _qry = (from ar in query_result.ToList<asset_registrationViewModel>()
+                        join dispo in disposal_proposed.ToList<LastApprovalDTO>() on ar.asset_id equals dispo.assset_id
+                        into ar_dispo_joined
+                        from ar1 in ar_dispo_joined.DefaultIfEmpty().ToList()
+                        from ar2 in disposal_proposed.AsEnumerable<LastApprovalDTO>().Where(rec_dis => (ar1 == null) ? false : rec_dis.assset_id == ar1.assset_id).DefaultIfEmpty()
+                        select new asset_registrationViewModel()
+                        {
+                            asset_id = ar.asset_id,
+                            asset_type_id = ar.asset_type_id,
+                            asset_type = ar.asset_type,
+                            asset_number = ar.asset_number,
+                            company_id = ar.company_id,
+                            company = ar.company,
+                            asset_reg_location_id = ar.asset_reg_location_id,
+                            asset_reg_location = ar.asset_reg_location,
+                            asset_reg_pic_id = ar.asset_reg_pic_id,
+                            asset_reg_pic = ar.asset_reg_pic,
+                            category_id = ar.category_id,
+                            asset_category = ar.asset_category,
+                            asset_po_number = ar.asset_po_number,
+                            asset_do_number = ar.asset_do_number,
+                            asset_name = ar.asset_name,
+                            asset_merk = ar.asset_merk,
+                            asset_serial_number = ar.asset_serial_number,
+                            vendor_id = ar.vendor_id,
+                            vendor = ar.vendor,
+                            asset_receipt_date = ar.asset_receipt_date,
+                            location_id = ar.location_id,
+                            asset_location = ar.asset_location,
+                            department_id = ar.department_id,
+                            department = ar.department,
+                            employee_id = ar.employee_id,
+                            employee = ar.employee,
+                            asset_description = ar.asset_description,
+                            asset_disposal_status = (ar2 == null) ? string.Empty : "<strong>Disposal Proposed</strong>"
+                        }).ToList();
+
+            return Json(new { data = _qry }, JsonRequestBehavior.AllowGet);
+
         }
 
         // GET: asset_registration/Details/5
@@ -557,7 +673,9 @@ namespace ASM_UI.Controllers
                 //employee_list = db.ms_employee.Where(r => r.fl_active == true && r.deleted_date == null).Select(e => new ms_employee { employee_id = e.employee_id, employee_name = "[" + e.employee_nik + "] - " + e.employee_name, employee_email = e.employee_email }).ToList(),
                 employee_list = new List<ms_employee>(),
 
-                asset_receipt_date = DateTime.Now
+                asset_receipt_date = DateTime.Now,
+
+                asset_disposal_status = ""
 
             };
 
@@ -586,6 +704,411 @@ namespace ASM_UI.Controllers
 
             return View(asset);
         }
+
+        [HttpPost]
+        public JsonResult SaveAsset()
+        {
+            asset_registrationViewModel asset_reg = null;
+            using (DbContextTransaction dbTran = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    asset_reg = new asset_registrationViewModel()
+                    {
+                        asset_number = Request.Form["asset_number"],
+                        company_id = Convert.ToInt32(Request.Form["company_id"]),
+                        asset_reg_location_id = Convert.ToInt32(Request.Form["asset_reg_location_id"]),
+                        asset_reg_pic_id = Convert.ToInt32(Request.Form["asset_reg_pic_id"]),
+                        category_id = Convert.ToInt32(Request.Form["category_id"]),
+                        asset_receipt_date = Convert.ToDateTime(Request.Form["asset_receipt_date"]),
+                        asset_po_number = Request.Form["asset_po_number"],
+                        asset_do_number = Request.Form["asset_do_number"],
+                        asset_name = Request.Form["asset_name"],
+                        asset_merk = Request.Form["asset_merk"],
+                        asset_serial_number = Request.Form["asset_serial_number"],
+                        vendor_id = Convert.ToInt32(Request.Form["vendor_id"]),
+                        location_id = Convert.ToInt32(Request.Form["location_id"]),
+                        department_id = Convert.ToInt32(Request.Form["department_id"]),
+                        employee_id = Convert.ToInt32(Request.Form["employee_id"]),
+                        asset_description = Request.Form["asset_description"],
+                        //asset_file_attach = Request.Form["asset_img_file"],
+                        asset_quantity = Convert.ToInt32(Request.Form["asset_quantity"])
+                    };
+
+                    var file_upload = Request.Files["asset_img_file"];
+
+                    int _last_no = db.tr_asset_registration.Where(a => a.company_id == asset_reg.company_id
+                    && a.asset_reg_location_id == asset_reg.asset_reg_location_id
+                    && a.asset_reg_pic_id == asset_reg.asset_reg_pic_id
+                    && a.category_id == asset_reg.category_id
+                    && a.asset_receipt_date.Value.Year == asset_reg.asset_receipt_date.Value.Year).Count();
+
+                    int asset_quantity = 1;
+                    int.TryParse(asset_reg.asset_quantity.ToString(), out asset_quantity);
+                    if (asset_quantity <= 0) asset_quantity = 1;
+
+                    for (var rec_loop = 0; rec_loop < asset_quantity; rec_loop++)
+                    {
+                        #region ASSET 
+                        /*kode perusahana*/
+                        asset_reg.company = db.ms_asmin_company.Find(asset_reg.company_id);
+
+                        /*kode lokasi registr*/
+                        asset_reg.asset_reg_location = db.ms_asset_register_location.Find(asset_reg.asset_reg_location_id);
+
+                        /* PIC asset */
+                        asset_reg.asset_reg_pic = db.ms_asset_register_pic.Find(asset_reg.asset_reg_pic_id);
+
+                        /*kode department*/
+                        asset_reg.department = db.ms_department.Find(asset_reg.department_id);
+
+                        /*kategori asset*/
+                        asset_reg.asset_category = db.ms_asset_category.Find(asset_reg.category_id);
+
+                        /*tahun*/
+                        int ass_year = (asset_reg.asset_receipt_date.HasValue) ? asset_reg.asset_receipt_date.Value.Year : DateTime.Now.Year;
+
+                        /*no aktifa seq*/
+                        _last_no++;
+                        string no_activa = _last_no.ToString().PadLeft(5, '0');
+
+                        string complex_no = asset_reg.company.company_code.ToUpper()
+                            + asset_reg.asset_reg_location.asset_reg_location_code.ToUpper()
+                            + asset_reg.asset_reg_pic.asset_reg_pic_code.ToUpper()
+                            //+ asset_reg.department.department_code
+                            + asset_reg.asset_category.category_code
+                            + ass_year.ToString();
+
+                        asset_reg.asset_number = complex_no + no_activa + "-00";
+                        //asset_reg.asset_number = complex_no + no_activa;
+
+                        tr_asset_registration ass_reg = new tr_asset_registration();
+                        ass_reg.asset_type_id = 1; //parent
+                        ass_reg.asset_number = asset_reg.asset_number;
+                        ass_reg.company_id = asset_reg.company_id;
+                        ass_reg.asset_reg_location_id = asset_reg.asset_reg_location_id;
+                        ass_reg.asset_reg_pic_id = asset_reg.asset_reg_pic_id;
+                        ass_reg.category_id = asset_reg.category_id;
+                        ass_reg.asset_po_number = asset_reg.asset_po_number;
+                        ass_reg.asset_do_number = asset_reg.asset_do_number;
+                        ass_reg.asset_name = asset_reg.asset_name;
+                        ass_reg.asset_merk = asset_reg.asset_merk;
+                        ass_reg.asset_serial_number = asset_reg.asset_serial_number;
+                        ass_reg.vendor_id = asset_reg.vendor_id;
+                        ass_reg.asset_receipt_date = asset_reg.asset_receipt_date;
+                        ass_reg.location_id = asset_reg.location_id;
+                        ass_reg.current_location_id = asset_reg.location_id;
+                        ass_reg.department_id = asset_reg.department_id;
+                        ass_reg.current_department_id = asset_reg.department_id;
+                        ass_reg.asset_description = asset_reg.asset_description;
+                        ass_reg.employee_id = asset_reg.employee_id;
+                        ass_reg.current_employee_id = asset_reg.employee_id;
+
+                        ass_reg.fl_active = true;
+                        ass_reg.created_date = DateTime.Now;
+                        ass_reg.created_by = UserProfile.UserId;
+                        ass_reg.updated_date = DateTime.Now;
+                        ass_reg.updated_by = UserProfile.UserId;
+                        ass_reg.deleted_date = null;
+                        ass_reg.deleted_by = null;
+                        ass_reg.org_id = UserProfile.OrgId;
+
+                        ass_reg = db.tr_asset_registration.Add(ass_reg);
+                        db.SaveChanges();
+                        #endregion
+
+                        #region FILE ASSET
+                        //ass_reg.asset_file_attach = asset_reg.asset_file_attach;
+                        //var file = Request.Files["asset_img_file"];
+                        if (Request.Files.Count > 0)
+                        {
+                            //var file = Request.Files[0];
+                            app_root_path = Server.MapPath("~/");
+                            if (string.IsNullOrWhiteSpace(base_image_path))
+                                base_image_path = asset_registrationViewModel.path_file_asset;
+
+                            string img_path = Server.MapPath(base_image_path);
+                            if (!Directory.Exists(img_path))
+                                Directory.CreateDirectory(img_path);
+
+                            //var file = Request.Files["asset_img_file"];
+                            if (file_upload != null && file_upload.ContentLength > 0)
+                            {
+                                var fileName = "asset" + ass_reg.asset_id.ToString() + "_" + Path.GetFileName(file_upload.FileName);
+                                var path = Path.Combine(img_path, fileName);
+                                file_upload.SaveAs(path);
+                                tr_asset_image _ass_img = new tr_asset_image()
+                                {
+                                    asset_id = ass_reg.asset_id,
+                                    asset_img_address = fileName,
+                                    asset_qrcode = GenerateQRCode(asset_reg.asset_number)
+                                };
+                                db.tr_asset_image.Add(_ass_img);
+                                db.SaveChanges();
+                            }
+                        }
+                        #endregion
+                    }
+                    dbTran.Commit();
+
+                }
+                catch (Exception _exc)
+                {
+                    dbTran.Rollback();
+                    string msgError = string.Format("Fail to create new asset. {0}", _exc.Message);
+                    if (_exc.InnerException != null)
+                        msgError += ". Inner Exception:" + _exc.InnerException.Message;
+
+                    return Json(msgError, JsonRequestBehavior.AllowGet);
+                }
+            }
+
+            if (asset_reg != null)
+                Send_Email_Notif(asset_reg);
+
+            return Json("Asset Registration Success", JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpPost]
+        public JsonResult UpdateAsset()
+        {
+            int asset_id = Convert.ToInt32(Request.Form["asset_id"]);
+            string m_message = "";
+            asset_registrationViewModel asset_reg = null;
+            try
+            {
+                if (asset_id <= 0)
+                    throw new Exception("Invalid Asset ID");
+
+                asset_reg = new asset_registrationViewModel()
+                {
+                    asset_number = Request.Form["asset_number"],
+                    company_id = Convert.ToInt32(Request.Form["company_id"]),
+                    asset_reg_location_id = Convert.ToInt32(Request.Form["asset_reg_location_id"]),
+                    asset_reg_pic_id = Convert.ToInt32(Request.Form["asset_reg_pic_id"]),
+                    category_id = Convert.ToInt32(Request.Form["category_id"]),
+                    asset_receipt_date = Convert.ToDateTime(Request.Form["asset_receipt_date"]),
+                    asset_po_number = Request.Form["asset_po_number"],
+                    asset_do_number = Request.Form["asset_do_number"],
+                    asset_name = Request.Form["asset_name"],
+                    asset_merk = Request.Form["asset_merk"],
+                    asset_serial_number = Request.Form["asset_serial_number"],
+                    vendor_id = Convert.ToInt32(Request.Form["vendor_id"]),
+                    location_id = Convert.ToInt32(Request.Form["location_id"]),
+                    department_id = Convert.ToInt32(Request.Form["department_id"]),
+                    employee_id = Convert.ToInt32(Request.Form["employee_id"]),
+                    asset_description = Request.Form["asset_description"],
+                    //asset_file_attach = Request.Form["asset_img_file"],
+                    asset_quantity = Convert.ToInt32(Request.Form["asset_quantity"])
+                };
+
+                using (DbContextTransaction dbTran = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        #region EDIT ASSET
+                        //tdk boleh edit lokasi asset do
+                        //compy_id, lokasi_register, lokasi, dept, employee tdk boleh di edit
+
+                        tr_asset_registration ass_reg = db.tr_asset_registration.Find(asset_id);
+                        ass_reg.asset_type_id = 1; //parent
+                        //hal yang tidak di edit
+                        asset_reg.asset_number = ass_reg.asset_number;
+                        asset_reg.company_id = ass_reg.company_id;
+                        asset_reg.asset_reg_location_id = ass_reg.asset_reg_location_id;
+                        asset_reg.asset_reg_pic_id = ass_reg.asset_reg_pic_id;
+                        asset_reg.category_id = ass_reg.category_id;
+                        asset_reg.location_id = ass_reg.location_id;
+                        asset_reg.department_id = ass_reg.department_id;
+                        asset_reg.employee_id = ass_reg.employee_id;
+                        //hal yang tidak di edit
+
+                        asset_reg.company = db.ms_asmin_company.Find(ass_reg.company_id);
+
+                        asset_reg.asset_reg_location = db.ms_asset_register_location.Find(ass_reg.asset_reg_location_id);
+
+                        asset_reg.asset_reg_pic = db.ms_asset_register_pic.Find(ass_reg.asset_reg_pic_id);
+
+                        asset_reg.asset_category = db.ms_asset_category.Find(ass_reg.category_id);
+
+                        //if (string.IsNullOrWhiteSpace(ass_reg.asset_number))
+                        //{
+                        //    /*no aktifa seq*/
+                        //    int ass_year = (asset_reg.asset_receipt_date.HasValue) ? asset_reg.asset_receipt_date.Value.Year : DateTime.Now.Year;
+                        //    //int _last_no = db.tr_asset_registration.Count();
+                        //    int _last_no = db.tr_asset_registration.Where(a => a.company_id == asset_reg.company_id
+                        //    && a.asset_reg_location_id == asset_reg.asset_reg_location_id
+                        //    && a.asset_reg_pic_id == asset_reg.asset_reg_pic_id
+                        //    && a.category_id == asset_reg.category_id
+                        //    && a.asset_receipt_date.Value.Year == asset_reg.asset_receipt_date.Value.Year).Count();
+
+                        //    _last_no++;
+                        //    string no_activa = _last_no.ToString().PadLeft(5, '0');
+
+                        //    string complex_no = asset_reg.company.company_code.ToUpper()
+                        //        + asset_reg.asset_reg_location.asset_reg_location_code.ToUpper()
+                        //        + asset_reg.asset_reg_pic.asset_reg_pic_code.ToUpper()
+                        //        //+ asset_reg.department.department_code
+                        //        + asset_reg.asset_category.category_code
+                        //        + ass_year.ToString();
+
+                        //    asset_reg.asset_number = complex_no + no_activa + "-00";
+                        //}
+                        //else
+                        //{
+                        //    ass_reg.asset_number = asset_reg.asset_number;
+                        //}
+
+                        ass_reg.asset_po_number = asset_reg.asset_po_number;
+                        ass_reg.asset_do_number = asset_reg.asset_do_number;
+                        ass_reg.asset_name = asset_reg.asset_name;
+                        ass_reg.asset_merk = asset_reg.asset_merk;
+                        ass_reg.asset_serial_number = asset_reg.asset_serial_number;
+                        ass_reg.vendor_id = asset_reg.vendor_id;
+                        ass_reg.asset_description = asset_reg.asset_description;
+                        ass_reg.asset_receipt_date = asset_reg.asset_receipt_date;
+
+                        //ass_reg.location_id = asset_reg.location_id;
+                        //ass_reg.department_id = asset_reg.department_id;
+                        //ass_reg.employee_id = asset_reg.employee_id;
+
+                        ass_reg.fl_active = true;
+                        ass_reg.updated_date = DateTime.Now;
+                        ass_reg.updated_by = UserProfile.UserId;
+                        ass_reg.deleted_date = null;
+                        ass_reg.deleted_by = null;
+                        ass_reg.org_id = UserProfile.OrgId;
+
+                        db.Entry(ass_reg).State = EntityState.Modified;
+                        db.SaveChanges();
+
+                        #endregion
+
+                        #region FILE ASSEST
+                        if (Request.Files.Count > 0)
+                        {
+                            //var file = Request.Files[0];
+                            app_root_path = Server.MapPath("~/");
+                            if (string.IsNullOrWhiteSpace(base_image_path))
+                                base_image_path = asset_registrationEditViewModel.path_file_asset;
+
+                            string img_path = Server.MapPath(base_image_path);
+                            if (!Directory.Exists(img_path))
+                                Directory.CreateDirectory(img_path);
+
+                            var file = Request.Files["asset_img_file"];
+                            if (file != null && file.ContentLength > 0)
+                            {
+                                string fileName = ""; string path = "";
+
+                                //check existing and delete dari db dan folder
+                                tr_asset_image img_db = db.tr_asset_image.SingleOrDefault(c => c.asset_id == asset_id);
+                                if (img_db != null)
+                                {
+                                    fileName = img_db.asset_img_address;
+                                    base_image_path = asset_registrationEditViewModel.path_file_asset;
+                                    img_path = Server.MapPath(base_image_path);
+                                    path = Path.Combine(img_path, fileName);
+                                    if (System.IO.File.Exists(path))
+                                        System.IO.File.Delete(path);
+
+                                    db.tr_asset_image.Remove(img_db);
+                                    db.SaveChanges();
+                                }
+
+                                //insert new
+                                fileName = "asset" + ass_reg.asset_id.ToString() + "_" + Path.GetFileName(file.FileName);
+                                path = Path.Combine(img_path, fileName);
+                                file.SaveAs(path);
+
+                                tr_asset_image _ass_img = new tr_asset_image()
+                                {
+                                    asset_id = ass_reg.asset_id,
+                                    asset_img_address = fileName,
+                                    asset_qrcode = GenerateQRCode(ass_reg.asset_number)
+                                };
+                                db.tr_asset_image.Add(_ass_img);
+                                db.SaveChanges();
+                            }
+                        }
+                        #endregion
+                        dbTran.Commit();
+                    }
+                    catch (Exception _exc)
+                    {
+                        dbTran.Rollback();
+                        m_message = string.Format("Fail to save update asset. {0}", _exc.Message);
+                    }
+                }
+
+                m_message = "Update Asset Registration Success";
+            }
+            catch (Exception _exc)
+            {
+
+                m_message = string.Format("{0}", _exc.Message);
+
+            }
+
+            return Json(m_message, JsonRequestBehavior.AllowGet);
+        }
+
+
+        /// <summary>
+        /// Send Email Notif 
+        /// </summary>
+        /// <param name="asset_reg"></param>
+        private void Send_Email_Notif(asset_registrationViewModel asset_reg)
+        {
+            #region "Send Email Notif to accounting department"
+            try
+            {
+                ms_disposal_type Dept3 = db.ms_disposal_type.Find(3);
+                int acct_id = Convert.ToInt32(Dept3.disposal_by_dept_id);
+                var _qry = (from dept in db.ms_department.Where(dept => dept.department_id == acct_id) select dept).ToList().FirstOrDefault();
+                if (_qry == null)
+                    throw new Exception("Department not found");
+
+                sy_email_log sy_email_log = new sy_email_log();
+                sy_email_log.elog_to = _qry.department_email;
+                sy_email_log.elog_subject = string.Format("Asset Registration");
+                sy_email_log.elog_template = "EMAIL_TEMPLATE_01";
+
+                var _bodymail = app_setting.APPLICATION_SETTING.Where(c => c.app_key.Contains("EMAIL_TEMPLATE_01")).FirstOrDefault();
+                if (_bodymail == null)
+                    throw new Exception("Email Template 01 not found");
+
+                string strBodyMail = _bodymail.app_value;
+                strBodyMail = strBodyMail.Replace("[to]", _qry.department_name + " Department");
+                strBodyMail = strBodyMail.Replace("[action]", "Dispose");
+                strBodyMail = strBodyMail.Replace("[assetnumber]", asset_reg.asset_number);
+                strBodyMail = strBodyMail.Replace("[assetname]", asset_reg.asset_name);
+
+                ms_asset_location loc = db.ms_asset_location.Find(asset_reg.location_id);
+                if (loc == null)
+                    throw new Exception("Asset Location not found");
+                strBodyMail = strBodyMail.Replace("[assetlocation]", loc.location_name);
+
+                ms_department deptment = db.ms_department.Find(asset_reg.department_id);
+                if (deptment == null)
+                    throw new Exception("Department not found");
+                strBodyMail = strBodyMail.Replace("[department]", deptment.department_name);
+
+                sy_email_log.elog_body = strBodyMail;
+                var EmailHelper = new EmailHelper()
+                {
+                    ToAddress = sy_email_log.elog_to,
+                    Email_Template = sy_email_log.elog_template,
+                    MailSubject = sy_email_log.elog_subject,
+                    MailBody = sy_email_log.elog_body
+                };
+                EmailHelper.Send();
+            }
+            catch { }
+            #endregion
+
+        }
+
 
         // POST: asset_registration/Create
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
@@ -742,53 +1265,8 @@ Rincian :
 
                 }
 
-                #region "Send Email Notif to accounting department"
-                try
-                {
-                    ms_disposal_type Dept3 = db.ms_disposal_type.Find(3);
-                    int acct_id = Convert.ToInt32(Dept3.disposal_by_dept_id);
-                    var _qry = (from dept in db.ms_department.Where(dept => dept.department_id == acct_id) select dept).ToList().FirstOrDefault();
-                    if (_qry == null)
-                        throw new Exception("Department not found");
-
-                    sy_email_log sy_email_log = new sy_email_log();
-                    sy_email_log.elog_to = _qry.department_email;
-                    sy_email_log.elog_subject = string.Format("Asset Registration");
-                    sy_email_log.elog_template = "EMAIL_TEMPLATE_01";
-
-                    var _bodymail = app_setting.APPLICATION_SETTING.Where(c => c.app_key.Contains("EMAIL_TEMPLATE_01")).FirstOrDefault();
-                    if (_bodymail == null)
-                        throw new Exception("Email Template 01 not found");
-
-                    string strBodyMail = _bodymail.app_value;
-                    strBodyMail = strBodyMail.Replace("[to]", _qry.department_name + " Department");
-                    strBodyMail = strBodyMail.Replace("[action]", "Dispose");
-                    strBodyMail = strBodyMail.Replace("[assetnumber]", asset_reg.asset_number);
-                    strBodyMail = strBodyMail.Replace("[assetname]", asset_reg.asset_name);
-
-                    ms_asset_location loc = db.ms_asset_location.Find(asset_reg.location_id);
-                    if (loc == null)
-                        throw new Exception("Asset Location not found");
-                    strBodyMail = strBodyMail.Replace("[assetlocation]", loc.location_name);
-
-                    ms_department deptment = db.ms_department.Find(asset_reg.department_id);
-                    if (deptment == null)
-                        throw new Exception("Department not found");
-                    strBodyMail = strBodyMail.Replace("[department]", deptment.department_name);
-
-                    sy_email_log.elog_body = strBodyMail;
-                    var EmailHelper = new EmailHelper()
-                    {
-                        ToAddress = sy_email_log.elog_to,
-                        Email_Template = sy_email_log.elog_template,
-                        MailSubject = sy_email_log.elog_subject,
-                        MailBody = sy_email_log.elog_body
-                    };
-                    EmailHelper.Send();
-                }
-                catch { }
-                #endregion
-
+                //Send Email Notif to accounting department
+                Send_Email_Notif(asset_reg);
                 return RedirectToAction("Index");
 
             }

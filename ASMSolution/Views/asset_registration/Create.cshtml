@@ -40,7 +40,7 @@
                         <!-- widget content -->
                         <div class="widget-body no-padding">
 
-                            @using (Html.BeginForm("Create", "asset_registration", FormMethod.Post, htmlAttributes: new { @class = "smart-form", enctype = "multipart/form-data" }))
+                            @using (Html.BeginForm("Create", "asset_registration", FormMethod.Post, htmlAttributes: new { id = "asset_registration_form", @class = "smart-form", enctype = "multipart/form-data" }))
                             {
                                 <header>
                                     Registration Asset Form
@@ -378,8 +378,8 @@
                                 <footer>
                                     <div class="form-group">
                                         <div class="col-md-7">
-                                            @Html.ActionLink("Cancel", "Index", "asset_registration", htmlAttributes: new { @class = "btn btn-default" })
-                                            <input type="submit" value="Save" class="btn btn-primary" />
+                                            @Html.ActionLink("Cancel", "Index", "asset_registration", htmlAttributes: new { id = "CancelAsset", @class = "btn btn-default" })
+                                            <input type="button" value="Save" class="btn btn-primary" id="SaveAsset" onclick="Save()" />
                                         </div>
                                     </div>
                                 </footer>
@@ -473,5 +473,223 @@
             });
 
         });
+
+        /*var asset_reg_pic = $("#asset_registration_form").validate({
+            rules: {
+                asset_reg_pic_id: "required"
+            }
+        });
+        $(document).on("change", "#asset_reg_pic_id", function () {
+            asset_reg_pic.form();
+        });*/
+
+        function Save() {
+            //ValidateForm();
+            var $asset_regForm = $("#asset_registration_form").validate({
+                // Rules for form validation
+                rules: {
+                    company_id: {
+                        required: true,
+                    },
+                    asset_reg_location_id: {
+                        required: true,
+                    },
+                    asset_reg_pic_id: {
+                        required: true,
+                    },
+                    category_id: {
+                        required: true,
+                    },
+                    asset_receipt_date: {
+                        required: true
+                    },
+                    asset_name: {
+                        required: true
+                    },
+                    asset_description: {
+                        required: true
+                    },
+                    asset_quantity: {
+                        required: true
+                    },
+                    asset_img_file: {
+                        required: true
+                    }
+                },
+
+                // Messages for form validation
+                messages: {
+                    company_id: {
+                        required: 'Please select company'
+                    },
+                    asset_reg_location_id: {
+                        required: 'Please select register location'
+                    },
+                    asset_reg_pic_id: {
+                        required: 'Please select register pic'
+                    },
+                    category_id: {
+                        required: 'Please select category'
+                    },
+                    asset_receipt_date: {
+                        required: 'Please input receipt date'
+                    },
+                    asset_name: {
+                        required: 'Please input asset name'
+                    },
+                    asset_description: {
+                        required: 'Please input asset description'
+                    },
+                    asset_quantity: {
+                        required: 'Please input asset quantity'
+                    },
+                    asset_img_file: {
+                        required: 'Please select image to upload'
+                    },
+                },
+
+                // Do not change code below
+                errorPlacement: function (error, element) {
+                    error.insertAfter(element.parent());
+                }
+            });
+            $(document).on("change", "#asset_reg_pic_id", function () {
+                $asset_regForm.form();
+            });
+            $(document).on("change", "#category_id", function () {
+                $asset_regForm.form();
+            });
+            if ($("#asset_registration_form").valid()) {
+                swal({
+                    title: "Are you sure you have entried valid data?",
+                    type: "info",
+                    showCancelButton: true,
+                    confirmButtonColor: "#1fdd48",
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: "Yes, Continue!",
+                    cancelButtonClass: 'btn btn-danger',
+                    closeOnConfirm: false,
+                    closeOnEsc: false,
+                    closeOnCancel: false,
+                    showLoaderOnConfirm: true,
+                    preConfirm: () => {
+                        return new Promise(() => {
+                            //ajax side
+                            var urlSave = '/asset_registration/SaveAsset/';
+                            var form = $('#asset_registration_form')[0];
+                            var formData = new FormData(form);
+
+                            $.ajax({
+                                type: 'POST',
+                                processData: false,
+                                contentType: false,
+                                url: urlSave,
+                                //data: $("#asset_registration_form").serialize(),
+                                data: formData,
+                                success: function (result) {
+                                    //alert(result);
+                                    $('#Save').prop('disabled', true);
+                                    $('#Cancel').prop('disabled', true);
+                                    /* ---------------
+                                    swal({
+                                        title: "Success",
+                                        text: result,
+                                        type: "success"
+                                    });
+
+                                    ------ */
+                                    /*--------
+                                    setTimeout(function () {
+                                        swal({
+                                            title: "Success",
+                                            text: "Success",
+                                            type: "success"
+                                        }, function () {
+                                            window.location = "/asset_registration/";
+                                        });
+                                    }, 1000);
+                                    --------------------- */
+
+                                    swal({
+                                        title: "Success",
+                                        text: "Asset Registration has been succssfully saved",
+                                        type: "success"
+                                    },
+                                        {
+                                            buttons: {
+                                                finish_rec: "OK Finish.",
+                                                new_rec: {
+                                                    text: "Create New",
+                                                    value: "new_rec",
+                                                },
+                                            },
+                                        })
+                                        .then((value) => {
+                                            switch (value) {
+
+                                                case "new_rec":
+                                                    window.location = "/asset_registration/create";
+                                                    break;
+
+                                                default:
+                                                    window.location = "/asset_registration/";
+                                            }
+                                        });
+                                },
+                                error: function (data) {
+                                    swal("Error", "Error Save Asset", "error");
+                                }
+                            });
+
+                            /* ------------------ajax kedua jika ingin dipisah save data dan save file ------------------
+                            var url = "/asset_registration/SaveAsset/";
+                            var form = $('#asset_registration_form')[0];
+                            var formData = new FormData(form);
+
+                            $.ajax(url, {
+                                method: 'post',
+                                processData: false,
+                                contentType: false,
+                                data: formData
+                            }).done(function (data) {
+                                if (data.success) {
+                                    //alert("Files uploaded");
+                                    swal({
+                                        title: "Success",
+                                        text: result,
+                                        type: "success"
+                                    });
+
+                                    $('#SaveAsset').prop('disabled', true);
+                                    $('#CancelAsset').prop('disabled', true);
+                                } else {
+                                    //alert("Error while uploading the files");
+                                    swal("Error", "Error Save Asset", "error");
+                                }
+                            }).fail(function (data) {
+                                console.log(data);
+                                //alert("Error while uploading the files");
+                            });
+                            */
+                        })
+                    },
+                    allowOutsideClick: () => !swal.isLoading()
+                }).then((result) => {
+                    if (result.dismiss) {
+                        swal("Cancel", "You Cancel Process Finish Registration", "error");
+                    }
+                });
+
+            }
+            else {
+                swal({
+                    title: "Validation Error",
+                    text: "Please check your input data...",
+                    type: "warning"
+                });
+                var validator = $("#asset_registration_form").validate();
+                validator.form();
+            }
+        }
     </script>
 }

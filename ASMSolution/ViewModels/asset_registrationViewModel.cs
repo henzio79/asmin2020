@@ -9,6 +9,7 @@ using ASM_UI;
 
 namespace ASM_UI.Models
 {
+    [Serializable]
     public class asset_registrationViewModel
     {
 
@@ -115,7 +116,7 @@ namespace ASM_UI.Models
         [Display(Name = "Vendor")]
         [Required(ErrorMessage = "Vendor is mandatory")]
         public int? vendor_id { get; set; }
-
+        
         public virtual ms_vendor vendor { get; set; }
 
         public List<ms_vendor> vendor_list { get; set; }
@@ -162,6 +163,10 @@ namespace ASM_UI.Models
         [StringLength(200)]
         [Display(Name = "Asset Description")]
         public string asset_description { get; set; }
+
+
+        [Display(Name = "Disposal Status")]
+        public string asset_disposal_status { get; set; }
 
 
         public string base_image_path { get; set; }
@@ -397,6 +402,9 @@ namespace ASM_UI.Models
         [StringLength(200)]
         [Display(Name = "Asset Description")]
         public string asset_description { get; set; }
+
+
+        public string asset_disposal_status { get; set; }
 
 
         public string base_image_path { get; set; }

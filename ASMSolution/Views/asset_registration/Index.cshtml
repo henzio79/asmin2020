@@ -69,9 +69,12 @@
                                         <th>
                                             @Html.DisplayNameFor(model => model.vendor_id)
                                         </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.asset_disposal_status)
+                                        </th>
                                         <th colspan="2" width="5%">Action</th>
                                         <th hidden="hidden" width="5%"></th>
-                                        @*<th hidden="hidden" width="5%"></th>*@ 
+                                        @*<th hidden="hidden" width="5%"></th>*@
                                     </tr>
                                 </thead>
                             </table>
@@ -164,6 +167,7 @@
                         { "data": "asset_name", "autoWidth": true },
                         { "data": "asset_merk", "autoWidth": true },
                         { "data": "vendor.vendor_name", "autoWidth": true },
+                        { "data": "asset_disposal_status", "autoWidth": true },
                         {
                             "data": "action",
                             "autowidth": true,
