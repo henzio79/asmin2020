@@ -39,6 +39,9 @@ namespace ASM_UI.Models
 
         public int? org_id { get; set; }
 
+        public int? department_id { get; set; }
+
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<tr_asset_registration> tr_asset_registration { get; set; }
     }

@@ -164,28 +164,13 @@ namespace ASM_UI.Controllers
             return View(_qry);
         }
 
-        [HttpGet]
-        public JsonResult List()
+        /// <summary>
+        /// list of asset that has been disposed.
+        /// </summary>
+        /// <returns></returns>
+        private List<int> Get_AssetDisposal_Done()
         {
-            db.Configuration.ProxyCreationEnabled = false;
-            IEnumerable<asset_registrationViewModel> query_result = null;
 
-            int pic_asset = (int)UserProfile.department_id;
-            /*
-             Pertanyaan Requirement :
-             1. apakah pengertian departement asset = departement employee ?
-             2. jika PIC asset hanya 3 dept it (IT, GA, dan OPS), jika ada user legal di kasih login, apakah login org legal tsb bisa melihat asset departementnya (legal) ?
-                 - siapa yang akan entri asset departement legal ?
-             */
-
-            //if (UserProfile.department_id == 1)
-            //    pic_asset = 1;
-            //else if (UserProfile.department_id == 2)
-            //    pic_asset = 2;
-            //else
-            //    pic_asset = 1003;
-
-            #region Mengenai Asset Disposal
             /* disposal has been done*/
             var disposal_done_approval = (from c in db.tr_disposal_approval
                                           where (c.approval_date != null && c.fl_active == true && c.deleted_date == null)
@@ -195,6 +180,7 @@ namespace ASM_UI.Controllers
                                               request_id = g.Key,
                                               approval_id = g.Max(a => a.approval_id)
                                           }).ToList();
+
             var disposal_done = (from a in disposal_done_approval
                                  join b in db.tr_disposal_approval on a.approval_id equals b.approval_id
                                  join c in db.tr_disposal_request on b.request_id equals c.request_id
@@ -210,8 +196,33 @@ namespace ASM_UI.Controllers
                                  }).ToList<LastApprovalDTO>();
 
             List<int> _disposal_asset_id = (from d in disposal_done
-                                          where d.approval_date != null
-                                          select d.assset_id).DefaultIfEmpty<int>().ToList();
+                                            where d.approval_date != null
+                                            select d.assset_id).DefaultIfEmpty<int>().ToList();
+            return _disposal_asset_id;
+        }
+
+        [HttpGet]
+        public JsonResult List()
+        {
+            db.Configuration.ProxyCreationEnabled = false;
+            IEnumerable<asset_registrationViewModel> query_result = null;
+            //if (UserProfile.department_id == 1)
+            //    pic_asset = 1;
+            //else if (UserProfile.department_id == 2)
+            //    pic_asset = 2;
+            //else
+            //    pic_asset = 1003;
+            // .....diganti ya....
+
+            var _pic_asset = db.ms_asset_register_pic
+                .Where(a => a.department_id == UserProfile.department_id)
+                .Select(a => a.asset_reg_pic_id).FirstOrDefault();
+            int pic_asset = (int)_pic_asset;
+
+
+            #region Mengenai Asset Disposal
+
+            List<int> _disposal_asset_id = this.Get_AssetDisposal_Done();
 
             /* jika ada asset yg sedang di disposal : maka tampilkan status disposal pada list asset registration */
             var disposal_proposed_approval = (from c in db.tr_disposal_approval
@@ -1689,11 +1700,23 @@ Rincian :
         public JsonResult GetAssetList(int? id = 0)
         {
             db.Configuration.ProxyCreationEnabled = false;
+            var _pic_asset = db.ms_asset_register_pic
+                .Where(a => a.department_id == UserProfile.department_id)
+                .Select(a => a.asset_reg_pic_id).FirstOrDefault();
+            int pic_asset = (int)_pic_asset;
+            List<int> _disposal_asset_id = this.Get_AssetDisposal_Done();
+
+
             int asset_id = (int)(id);
             if (asset_id == 0)
             {
                 var _list = from t in db.tr_asset_registration
-                            where t.fl_active == true && t.deleted_date == null && t.asset_type_id == 1
+                            where t.fl_active == true && t.deleted_date == null
+                                && t.company_id == UserProfile.company_id
+                                && t.current_location_id == UserProfile.location_id
+                                && t.asset_reg_pic_id == pic_asset
+                                && t.asset_type_id == (int)Enum_asset_type_Key.AssetParent
+                                && !_disposal_asset_id.Contains(t.asset_id)
                             select t;
 
                 return Json(new { data = _list.ToList() }, JsonRequestBehavior.AllowGet);
@@ -1701,7 +1724,9 @@ Rincian :
             else
             {
                 var _list = from t in db.tr_asset_registration
-                            where t.fl_active == true && t.deleted_date == null && t.asset_type_id == 1 && t.asset_id == asset_id
+                            where t.fl_active == true && t.deleted_date == null
+                            && t.asset_type_id == 1
+                            && t.asset_id == asset_id
                             select t;
 
                 return Json(_list.ToList(), JsonRequestBehavior.AllowGet);

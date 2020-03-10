@@ -104,10 +104,18 @@ namespace ASM_UI.Controllers
         public JsonResult List()
         {
             db.Configuration.ProxyCreationEnabled = false;
+
+            var _pic_asset = db.ms_asset_register_pic
+                .Where(a => a.department_id == UserProfile.department_id)
+                .Select(a => a.asset_reg_pic_id).FirstOrDefault();
+            int pic_asset = (int)_pic_asset;
+
+
             var query_result = (from ar in db.tr_asset_registration
                                 where (ar.fl_active == true && ar.deleted_date == null
                                 && ar.company_id == UserProfile.company_id
                                 && ar.current_location_id == UserProfile.location_id
+                                && ar.asset_reg_pic_id == pic_asset
                                 && ar.asset_type_id == (int)Enum_asset_type_Key.AssetChild)
 
                                 join p in db.tr_asset_registration on ar.asset_parent_id equals p.asset_id
