@@ -11,19 +11,19 @@ namespace ASM_UI.App_Start
     {
         public override object BindModel(ControllerContext controllerContext, ModelBindingContext bindingContext)
         {
-            var value = bindingContext.ValueProvider.GetValue(bindingContext.ModelName);
-
-            // Check if the DateTime property being parsed is not null or ""
-            if (value.AttemptedValue != null && value.AttemptedValue != "")
+            var dt = new object();
+            try
             {
-                // Parse the datetime
-                var dt = DateTime.ParseExact(value.AttemptedValue, "dd-MM-yyyy", CultureInfo.InvariantCulture);
-                return dt;
+                var value = bindingContext.ValueProvider.GetValue(bindingContext.ModelName);
+                // Check if the DateTime property being parsed is not null or ""
+                if (value.AttemptedValue != null && value.AttemptedValue != "")
+                {
+                    // Parse the datetime
+                    dt = DateTime.ParseExact(value.AttemptedValue, "dd-MM-yyyy", CultureInfo.InvariantCulture);
+                }
             }
-            else
-            {
-                return null;
-            }
+            catch { dt = null; }
+            return dt;
         }
     }
 }
