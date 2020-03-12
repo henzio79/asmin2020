@@ -25,11 +25,15 @@ namespace ASM_UI.Models
 
     public class dashboard_chart02_ViewModel
     {
-        public ms_asset_category asset_category { get; set; }
+        public int department_id { get; set; }
 
-        public string asset_qty { get; set; }
+        public string department_code { get; set; }
 
-        public string asset_value { get; set; }
+        public string department_name { get; set; }
+
+        public int mutation_qty { get; set; }
+
+        public int dispose_qty { get; set; }
 
     }
 

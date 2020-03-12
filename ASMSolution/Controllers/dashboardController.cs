@@ -80,5 +80,62 @@ namespace ASM_UI.Controllers
 
         }
 
+        public JsonResult Dashboard_Chart2(int? data = null)
+        {
+            var _qry = new object();
+            try
+            {
+                var _asOfDate = new SqlParameter("@AsOfDate", DateTime.Now);
+                var _chart1 = db.Database.SqlQuery<dashboard_chart02_ViewModel>("DASHBOARD_CHART02", _asOfDate).ToList<dashboard_chart02_ViewModel>();
+
+                if (data == null || data < 0)
+                    data = 0;
+
+                if (data > 2)
+                    data = 2;
+
+
+                if (data == 1)
+                {
+                    _qry = _chart1.Select(a => new
+                    {
+                        a.department_id,
+                        a.department_code,
+                        a.mutation_qty,
+                    });
+
+                }
+                else if (data == 2)
+                {
+                    _qry = _chart1.Select(a => new
+                    {
+                        a.department_id,
+                        a.department_code,
+                        a.dispose_qty
+                    });
+
+                }
+                else
+                {
+                    _qry = _chart1.Select(a => new
+                    {
+                        a.department_id,
+                        a.department_code,
+                        a.mutation_qty,
+                        a.dispose_qty
+                    });
+                }
+
+
+            }
+            catch (Exception _exc)
+            {
+                string str_message = _exc.Message;
+            }
+            return Json(new { data = _qry }, JsonRequestBehavior.AllowGet);
+
+        }
+
+
     }
 }
