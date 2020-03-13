@@ -106,11 +106,11 @@ namespace ASM_UI.Models
         public string asset_name { get; set; }
 
         [StringLength(100)]
-        [Display(Name = "Asset Brand")]
+        [Display(Name = "Merk Asset")]
         public string asset_merk { get; set; }
 
         [StringLength(50)]
-        [Display(Name = "Asset Serial")]
+        [Display(Name = "Serial Number Asset")]
         public string asset_serial_number { get; set; }
 
         [Display(Name = "Vendor")]
