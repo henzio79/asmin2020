@@ -252,6 +252,7 @@ namespace ASM_UI.Controllers
 
             if (UserProfile.asset_reg_location_id == 2)
             {
+                #region asset_reg_location_id == 2
                 query_result = (from ar in db.tr_asset_registration
                                 where (ar.fl_active == true && ar.deleted_date == null
                                 && ar.company_id == UserProfile.company_id
@@ -287,6 +288,11 @@ namespace ASM_UI.Controllers
                                 join i in db.ms_asset_location on ar.location_id equals i.location_id
                                 where (i.fl_active == true && i.deleted_date == null)
 
+                                //join dispo in disposal_proposed.ToList<LastApprovalDTO>() on ar.asset_id equals dispo.assset_id
+                                //into ar_dispo_joined
+                                //from ar1 in ar_dispo_joined.DefaultIfEmpty()
+                                //from ar2 in disposal_proposed.Where(rec_dis => (rec_dis == null) ? false : rec_dis.assset_id == ar1.assset_id).DefaultIfEmpty()
+
                                 select new asset_registrationViewModel()
                                 {
                                     asset_id = ar.asset_id,
@@ -316,14 +322,16 @@ namespace ASM_UI.Controllers
                                     employee_id = ar.employee_id,
                                     employee = h,
                                     asset_description = ar.asset_description,
-                                    asset_disposal_status = "" //(ar2 == null) ? string.Empty : "<strong>Disposal Proposed</strong>"
+                                    asset_disposal_status = ""//(ar2 == null) ? string.Empty : "<strong>Disposal Proposed</strong>"
 
                                 }).ToList<asset_registrationViewModel>();
+                #endregion
 
             }
             else if (UserProfile.asset_reg_location_id == 1)
             {
-                query_result = (from ar in db.tr_asset_registration.ToList()
+                #region asset_reg_location_id == 1
+                query_result = (from ar in db.tr_asset_registration
                                 where (ar.fl_active == true && ar.deleted_date == null
                                 && ar.company_id == UserProfile.company_id
                                 && ar.asset_reg_pic_id == pic_asset
@@ -357,10 +365,10 @@ namespace ASM_UI.Controllers
                                 join i in db.ms_asset_location on ar.location_id equals i.location_id
                                 where (i.fl_active == true && i.deleted_date == null)
 
-                                join dispo in disposal_proposed.ToList<LastApprovalDTO>() on ar.asset_id equals dispo.assset_id
-                                into ar_dispo_joined
-                                from ar1 in ar_dispo_joined.DefaultIfEmpty()
-                                from ar2 in disposal_proposed.Where(rec_dis => (rec_dis == null) ? false : rec_dis.assset_id == ar1.assset_id).DefaultIfEmpty()
+                                //join dispo in disposal_proposed.ToList<LastApprovalDTO>() on ar.asset_id equals dispo.assset_id
+                                //into ar_dispo_joined
+                                //from ar1 in ar_dispo_joined.DefaultIfEmpty()
+                                //from ar2 in disposal_proposed.Where(rec_dis => (rec_dis == null) ? false : rec_dis.assset_id == ar1.assset_id).DefaultIfEmpty()
 
                                 select new asset_registrationViewModel()
                                 {
@@ -391,53 +399,37 @@ namespace ASM_UI.Controllers
                                     employee_id = ar.employee_id,
                                     employee = h,
                                     asset_description = ar.asset_description,
-                                    asset_disposal_status = (ar2 == null) ? string.Empty : "Disposal Proposed"
+                                    asset_disposal_status = ""// (ar2 == null) ? string.Empty : "Disposal Proposed"
 
                                 }).ToList<asset_registrationViewModel>();
+                #endregion
             }
 
             //int _count = query_result.ToList<asset_registrationViewModel>().Count;
             //int _count_dis = disposal_proposed.ToList<LastApprovalDTO>().Count;
 
-            var _qry = (from ar in query_result.ToList<asset_registrationViewModel>()
-                        join dispo in disposal_proposed.ToList<LastApprovalDTO>() on ar.asset_id equals dispo.assset_id
-                        into ar_dispo_joined
-                        from ar1 in ar_dispo_joined.DefaultIfEmpty().ToList()
-                        from ar2 in disposal_proposed.AsEnumerable<LastApprovalDTO>().Where(rec_dis => (ar1 == null) ? false : rec_dis.assset_id == ar1.assset_id).DefaultIfEmpty()
-                        select new asset_registrationViewModel()
-                        {
-                            asset_id = ar.asset_id,
-                            asset_type_id = ar.asset_type_id,
-                            asset_type = ar.asset_type,
-                            asset_number = ar.asset_number,
-                            company_id = ar.company_id,
-                            company = ar.company,
-                            asset_reg_location_id = ar.asset_reg_location_id,
-                            asset_reg_location = ar.asset_reg_location,
-                            asset_reg_pic_id = ar.asset_reg_pic_id,
-                            asset_reg_pic = ar.asset_reg_pic,
-                            category_id = ar.category_id,
-                            asset_category = ar.asset_category,
-                            asset_po_number = ar.asset_po_number,
-                            asset_do_number = ar.asset_do_number,
-                            asset_name = ar.asset_name,
-                            asset_merk = ar.asset_merk,
-                            asset_serial_number = ar.asset_serial_number,
-                            vendor_id = ar.vendor_id,
-                            vendor = ar.vendor,
-                            asset_receipt_date = ar.asset_receipt_date,
-                            location_id = ar.location_id,
-                            asset_location = ar.asset_location,
-                            department_id = ar.department_id,
-                            department = ar.department,
-                            employee_id = ar.employee_id,
-                            employee = ar.employee,
-                            asset_description = ar.asset_description,
-                            asset_disposal_status = (ar2 == null) ? string.Empty : "<strong>Disposal Proposed</strong>"
-                        }).ToList();
+            var _qry = from ar in query_result.ToList<asset_registrationViewModel>()
+                       join dispo in disposal_proposed.ToList<LastApprovalDTO>() on ar.asset_id equals dispo.assset_id
+                       into ar_dispo_joined
+                       from ar1 in ar_dispo_joined.DefaultIfEmpty().ToList()
+                       from ar2 in disposal_proposed.AsEnumerable<LastApprovalDTO>().Where(rec_dis => (ar1 == null) ? false : rec_dis.assset_id == ar1.assset_id).DefaultIfEmpty()
+                       
+                       //kolom ini harus sama dengn data table di view nya
+                       select new
+                       {
+                           asset_id = ar.asset_id,
+                           asset_number = ar.asset_number,
+                           company_code = ar.company.company_code,
+                           asset_reg_location_code = ar.asset_reg_location.asset_reg_location_code,
+                           asset_reg_pic_code = ar.asset_reg_pic.asset_reg_pic_code,
+                           asset_category_code = ar.asset_category.category_code,
+                           asset_name = ar.asset_name,
+                           asset_merk = ar.asset_merk,
+                           vendor_name = ar.vendor.vendor_name,
+                           asset_disposal_status = (ar2 == null) ? string.Empty : "<strong>Disposal Proposed</strong>"
+                       };
 
-            return Json(new { data = _qry }, JsonRequestBehavior.AllowGet);
-
+            return Json(new { data = _qry.ToList() }, JsonRequestBehavior.AllowGet);
         }
 
         // GET: asset_registration/Details/5

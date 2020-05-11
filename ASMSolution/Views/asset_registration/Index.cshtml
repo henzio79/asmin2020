@@ -115,18 +115,16 @@
                                     type: "GET",
                                     url: "/asset_registration/Delete/" + id,
                                     success: function (data) {
-                                        if (data == "1")
-                                        {
+                                        if (data == "1") {
                                             swal.close();
                                             swal("Success", "Success Delete Data", "success");
                                             setTimeout(location.reload(true), 5000);
                                             window.location.href = "/asset_registration/index";
                                         }
-                                        else
-                                        {
+                                        else {
                                             swal("Failed", "Failed Delete Data", "error");
                                         }
-                                        
+
                                     },
                                 });
                             }
@@ -156,63 +154,63 @@
                 "ajax": {
                     "url": "/asset_registration/List/",
                     "type": "GET",
-                    "datatype": "json",
+                    "dataType": "json"
                 },
-                    "columns": [
-                        { "data": "asset_number", "autoWidth": true },
-                        { "data": "company.company_code", "autoWidth": true },
-                        { "data": "asset_reg_location.asset_reg_location_code", "autoWidth": true },
-                        { "data": "asset_reg_pic.asset_reg_pic_code", "autoWidth": true },
-                        { "data": "asset_category.category_code", "autoWidth": true },
-                        { "data": "asset_name", "autoWidth": true },
-                        { "data": "asset_merk", "autoWidth": true },
-                        { "data": "vendor.vendor_name", "autoWidth": true },
-                        { "data": "asset_disposal_status", "autoWidth": true },
-                        {
-                            "data": "action",
-                            "autowidth": true,
-                            "mRender": function (data, type, full) {
-                                return '<a href="/asset_registration/edit/' + full['asset_id'] + '">' + 'Edit' + '</a>';
-                            }
-                        },
-                        {
-                            "data": "action",
-                            "autowidth": true,
-                            "mRender": function (data, type, full) {
-                                return '<a href="/asset_registration/Details/' + full['asset_id'] + '">' + 'Detail' + '</a>';
-                            }
+                "columns": [
+                    { "data": "asset_number", "autoWidth": true },
+                    { "data": "company_code", "autoWidth": true },
+                    { "data": "asset_reg_location_code", "autoWidth": true },
+                    { "data": "asset_reg_pic_code", "autoWidth": true },
+                    { "data": "asset_category_code", "autoWidth": true },
+                    { "data": "asset_name", "autoWidth": true },
+                    { "data": "asset_merk", "autoWidth": true },
+                    { "data": "vendor_name", "autoWidth": true },
+                    { "data": "asset_disposal_status", "autoWidth": true },
+                    {
+                        "data": "action",
+                        "autowidth": true,
+                        "mRender": function (data, type, full) {
+                            return '<a href="/asset_registration/edit/' + full['asset_id'] + '">' + 'Edit' + '</a>';
                         }
-                        //{
-                        //    "data": "action",
-                        //    "autowidth": true,
-                        //    "mRender": function (data, type, full) {
-                        //        return '<a href="#" onclick="DeleteData('+full['asset_id']+')">' + 'Delete' + '</a>';
-                        //    }
-                        //}
-
-                    ]
-                },
-                {
-                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
-                    "t" +
-                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
-                "autoWidth": true,
-                "oLanguage": {
-                    "sSearch": '<span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span>'
-                },
-                "preDrawCallback": function () {
-                    // Initialize the responsive datatables helper once.
-                    if (!responsiveHelper_dt_basic) {
-                        responsiveHelper_dt_basic = new ResponsiveDatatablesHelper($('#table_basic'), breakpointDefinition);
+                    },
+                    {
+                        "data": "action",
+                        "autowidth": true,
+                        "mRender": function (data, type, full) {
+                            return '<a href="/asset_registration/Details/' + full['asset_id'] + '">' + 'Detail' + '</a>';
+                        }
                     }
-                },
-                "rowCallback": function (nRow) {
-                    responsiveHelper_dt_basic.createExpandIcon(nRow);
-                },
-                "drawCallback": function (oSettings) {
-                    responsiveHelper_dt_basic.respond();
-                }
-            });
+                    //{
+                    //    "data": "action",
+                    //    "autowidth": true,
+                    //    "mRender": function (data, type, full) {
+                    //        return '<a href="#" onclick="DeleteData('+full['asset_id']+')">' + 'Delete' + '</a>';
+                    //    }
+                    //}
+
+                ]
+            },
+                {
+                    "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                        "t" +
+                        "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                    "autoWidth": true,
+                    "oLanguage": {
+                        "sSearch": '<span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span>'
+                    },
+                    "preDrawCallback": function () {
+                        // Initialize the responsive datatables helper once.
+                        if (!responsiveHelper_dt_basic) {
+                            responsiveHelper_dt_basic = new ResponsiveDatatablesHelper($('#table_basic'), breakpointDefinition);
+                        }
+                    },
+                    "rowCallback": function (nRow) {
+                        responsiveHelper_dt_basic.createExpandIcon(nRow);
+                    },
+                    "drawCallback": function (oSettings) {
+                        responsiveHelper_dt_basic.respond();
+                    }
+                });
         });
 
     </script>

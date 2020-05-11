@@ -129,12 +129,12 @@
                                                                                     <label class="input">@item.ms_asmin_company.company_name</label>
                                                                                 </td>
 
-                                                                                <td>@Html.DropDownListFor(x => x.selected_register_id, new SelectList(item.sli_register_list, "Value", "Text", item.sli_register_list), new { @class = "form-control select" })</td>
-                                                                                <td>@Html.DropDownListFor(x => x.selected_location_id, new SelectList(item.sli_location_list, "Value", "Text", item.sli_location_list), new { @class = "form-control select" })</td>
+                                                                                <td>@Html.DropDownListFor(x => x.selected_register_id[i_loop], new SelectList(item.sli_register_list, "Value", "Text", item.selected_register_id), new { @class = "form-control select" })</td>
+                                                                                <td>@Html.DropDownListFor(x => x.selected_location_id[i_loop], new SelectList(item.sli_location_list, "Value", "Text", item.selected_location_id), new { @class = "form-control select" })</td>
 
-                                                                                <td>@Html.DropDownListFor(x => x.selected_department_id, new SelectList(item.sli_department_list, "Value", "Text", item.selected_department_id), new { @class = "form-control select" })</td>
-                                                                                <td>@Html.DropDownListFor(x => x.selected_job_level_id, new SelectList(item.sli_job_level_list, "Value", "Text", item.selected_job_level_id), new { @class = "form-control select" })</td>
-                                                                                @*<td>@Html.DropDownListFor(x => x.selected_user_type_id, new SelectList(item.sli_user_type_list, "Value", "Text", item.selected_user_type_id), new { @class = "form-control select" })</td>*@
+                                                                                <td>@Html.DropDownListFor(x => x.selected_department_id[i_loop], new SelectList(item.sli_department_list, "Value", "Text", item.selected_department_id), new { @class = "form-control select" })</td>
+                                                                                <td>@Html.DropDownListFor(x => x.selected_job_level_id[i_loop], new SelectList(item.sli_job_level_list, "Value", "Text", item.selected_job_level_id), new { @class = "form-control select" })</td>
+                                                                                @*<td>@Html.DropDownListFor(x => x.selected_user_type_id[i_loop], new SelectList(item.sli_user_type_list, "Value", "Text", item.selected_user_type_id), new { @class = "form-control select" })</td>*@
                                                                             </tr>
                                                                             i_loop += 1;
                                                                         }

@@ -262,7 +262,7 @@ namespace ASM_UI.Controllers
                 ms_employee = emp_db
             };
 
-            List<SelectListItem> first = new List<SelectListItem> { new SelectListItem { Text = "- [Not Set] -", Value = "0", Selected = true } };
+            List<SelectListItem> first = new List<SelectListItem> { new SelectListItem { Text = "- [Not Set] -", Value = "0" } };
 
             model.company_list = (from t in db.ms_asmin_company
                                   where (t.fl_active == true && t.deleted_date == null)
@@ -333,6 +333,16 @@ namespace ASM_UI.Controllers
             int i_pos = 0;
             int i_max = model.company_list.Count;
 
+            model.selected_employee_id = new int[i_max];
+            model.selected_company_id = new int[i_max];
+            model.selected_department_id = new int[i_max];
+            model.selected_job_level_id = new int[i_max];
+            model.selected_user_type_id = new int[i_max];
+            model.selected_register_id = new int[i_max];
+            model.selected_location_id = new int[i_max];
+            model.selected_fl_approver = new int[i_max];
+            model.selected_range_id = new int[i_max];
+
             foreach (ms_asmin_company company in model.company_list)
             {
                 employee_detailViewModel _item = new employee_detailViewModel()
@@ -354,6 +364,17 @@ namespace ASM_UI.Controllers
                 if (dtl_db != null)
                 {
                     dtl_db.range_id = 0;  //di hide
+
+                    model.selected_employee_id[i_pos] = _item.employee_id;
+                    model.selected_company_id[i_pos] = company.company_id;
+                    model.selected_department_id[i_pos] = (dtl_db.asset_reg_location_id.HasValue) ? dtl_db.asset_reg_location_id.Value : 0;
+                    model.selected_job_level_id[i_pos] = (dtl_db.job_level_id.HasValue) ? dtl_db.job_level_id.Value : 0;
+                    model.selected_user_type_id[i_pos] = (dtl_db.user_type_id.HasValue) ? dtl_db.user_type_id.Value : 0;
+                    model.selected_register_id[i_pos] = (dtl_db.asset_reg_location_id.HasValue) ? dtl_db.asset_reg_location_id.Value : 0;
+                    model.selected_location_id[i_pos] = (dtl_db.location_id.HasValue) ? dtl_db.location_id.Value : 0;
+                    model.selected_fl_approver[i_pos] = 0;
+                    model.selected_range_id[i_pos] = (dtl_db.range_id.HasValue) ? ((dtl_db.range_id.Value > 0) ? 1 : 0) : 0;
+
                     _item.selected_register_id = (dtl_db.asset_reg_location_id.HasValue) ? dtl_db.asset_reg_location_id.Value : 0;
                     _item.selected_location_id = (dtl_db.location_id.HasValue) ? dtl_db.location_id.Value : 0;
                     _item.selected_department_id = (dtl_db.department_id.HasValue) ? dtl_db.department_id.Value : 0;
@@ -370,6 +391,16 @@ namespace ASM_UI.Controllers
                 }
                 else
                 {
+
+                    model.selected_employee_id[i_pos] = _item.employee_id;
+                    model.selected_company_id[i_pos] = company.company_id;
+                    model.selected_department_id[i_pos] = 0;
+                    model.selected_job_level_id[i_pos] = 0;
+                    model.selected_user_type_id[i_pos] = 0;
+                    model.selected_register_id[i_pos] = 0;
+                    model.selected_location_id[i_pos] = 0;
+                    model.selected_fl_approver[i_pos] = 0;
+                    model.selected_range_id[i_pos] = 0;
 
                     _item.selected_register_id = 0;
                     _item.selected_location_id = 0;
@@ -436,7 +467,7 @@ namespace ASM_UI.Controllers
                                 if (emp_detail != null) //update
                                 {
                                     emp_detail.asset_reg_location_id = (emp_setup.selected_register_id[i_loop] > 0) ? emp_setup.selected_register_id[i_loop] : (int?)null;
-                                    emp_detail.location_id = (emp_setup.selected_register_id[i_loop] > 0) ? emp_setup.selected_register_id[i_loop] : (int?)null;
+                                    emp_detail.location_id = (emp_setup.selected_location_id[i_loop] > 0) ? emp_setup.selected_location_id[i_loop] : (int?)null;
                                     emp_detail.department_id = (emp_setup.selected_department_id[i_loop] > 0) ? emp_setup.selected_department_id[i_loop] : (int?)null;
                                     emp_detail.job_level_id = (emp_setup.selected_job_level_id[i_loop] > 0) ? emp_setup.selected_job_level_id[i_loop] : (int?)null;
                                     //emp_detail.user_type_id = (emp_setup.selected_user_type_id[i_loop] > 0) ? emp_setup.selected_user_type_id[i_loop] : (int?)null;

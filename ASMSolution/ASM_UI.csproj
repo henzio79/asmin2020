@@ -18,13 +18,14 @@
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <MvcBuildViews>false</MvcBuildViews>
     <UseIISExpress>true</UseIISExpress>
-    <IISExpressSSLPort />
+    <IISExpressSSLPort>44356</IISExpressSSLPort>
     <IISExpressAnonymousAuthentication />
     <IISExpressWindowsAuthentication />
     <IISExpressUseClassicPipelineMode />
     <UseGlobalApplicationHostFile />
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <Use64BitIISExpress />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -218,6 +219,7 @@
     <Compile Include="Controllers\countryController.cs" />
     <Compile Include="Controllers\courierController.cs" />
     <Compile Include="Controllers\currencyController.cs" />
+    <Compile Include="Controllers\dashboardController.cs" />
     <Compile Include="Controllers\departmentController.cs" />
     <Compile Include="Controllers\depreciationController.cs" />
     <Compile Include="Controllers\depreciationProcessController.cs" />
@@ -357,6 +359,7 @@
     <Compile Include="ViewModels\asset_warrantyViewModel.cs" />
     <Compile Include="ViewModels\countryViewModel.cs" />
     <Compile Include="ViewModels\currencyViewModel.cs" />
+    <Compile Include="ViewModels\dashboardViewModel.cs" />
     <Compile Include="ViewModels\depreciationViewModel.cs" />
     <Compile Include="ViewModels\disposalViewModel.cs" />
     <Compile Include="ViewModels\employee_detailViewModel.cs" />
@@ -1430,6 +1433,7 @@
     <Content Include="Views\account\ChangePassword.cshtml" />
     <Content Include="Views\Shared\NotFound.cshtml" />
     <Content Include="Views\mutationApproval\Details.cshtml" />
+    <Content Include="Views\dashboard\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -1482,7 +1486,7 @@
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>51455</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhost:51455/</IISUrl>
+          <IISUrl>https://localhost:44356/</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>
