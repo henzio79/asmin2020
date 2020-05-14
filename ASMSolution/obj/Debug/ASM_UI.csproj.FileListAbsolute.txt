@@ -144,4 +144,3 @@ D:\REPOSITORY\ASMIN\CODE\GIT\asmin2020\ASMSolution\obj\Debug\ASM_UI.csproj.CoreC
 D:\REPOSITORY\ASMIN\CODE\GIT\asmin2020\ASMSolution\obj\Debug\ASM_UI.csproj.CopyComplete
 D:\REPOSITORY\ASMIN\CODE\GIT\asmin2020\ASMSolution\obj\Debug\ASM_UI.dll
 D:\REPOSITORY\ASMIN\CODE\GIT\asmin2020\ASMSolution\obj\Debug\ASM_UI.pdb
-D:\REPOSITORY\ASMIN\CODE\GIT\asmin2020\ASMSolution\obj\Debug\ASM_UI.csprojAssemblyReference.cache

@@ -70,9 +70,9 @@ namespace ASM_UI.Controllers
             var _qry = (from ar in db.tr_asset_registration
                         where (ar.fl_active == true && ar.deleted_date == null 
                         //&& ar.asset_type_id == (int)Enum_asset_type_Key.AssetParent
-                        && ar.asset_number.Contains(strAssetNumber) 
-                        && ar.asset_name.Contains(strAssetName) 
-                        && ar.asset_merk.Contains(strMerk))
+                        && (ar.asset_number.Contains(strAssetNumber) || strAssetNumber == string.Empty)
+                        && (ar.asset_name.Contains(strAssetName) || strAssetName == string.Empty)
+                        && (ar.asset_merk.Contains(strMerk) || strMerk == string.Empty))
                         //&& ar.company_id == UserProfile.company_id 
                         //&& ar.department_id == UserProfile.department_id
                         join a in db.ms_vendor on ar.vendor_id equals a.vendor_id

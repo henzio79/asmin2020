@@ -445,6 +445,8 @@ namespace ASM_UI.Controllers
                 return HttpNotFound();
             }
 
+            tr_asset_image _EmptyImage = new tr_asset_image { asset_id = (int)id, asset_img_address = null, asset_qrcode = new byte[] { 0 } };
+
             var _qry = (from ar in db.tr_asset_registration
                         where (ar.fl_active == true && ar.asset_id == id && ar.deleted_date == null
                         && ar.company_id == UserProfile.company_id
@@ -477,7 +479,11 @@ namespace ASM_UI.Controllers
                         join i in db.ms_asset_location on ar.location_id equals i.location_id
                         where (i.fl_active == true && i.deleted_date == null)
 
-                        join j in db.tr_asset_image on ar.asset_id equals j.asset_id
+                        join j in db.tr_asset_image on ar.asset_id equals j.asset_id 
+
+                        //into _tTemp
+                        //from _tJ in _tTemp.DefaultIfEmpty()
+                        //from j_1 in db.tr_asset_image.Where(x_img => (x_img == null) ? false : x_img.asset_id == _tJ.asset_id).DefaultIfEmpty()
 
                         select new asset_registrationViewModel()
                         {
@@ -498,6 +504,7 @@ namespace ASM_UI.Controllers
                             asset_name = ar.asset_name,
                             asset_merk = ar.asset_merk,
                             asset_serial_number = ar.asset_serial_number,
+                            //tr_asset_images = (j_1 == null ? _EmptyImage : j_1),
                             tr_asset_images = j,
                             vendor_id = ar.vendor_id,
                             vendor = a,
@@ -582,8 +589,18 @@ namespace ASM_UI.Controllers
                                asset_description = ar.asset_description
                            }).ToList<subasset_registrationViewModel>();
 
-            string imreBase64Data = Convert.ToBase64String(_qry.tr_asset_images.asset_qrcode);
-            string imgDataURL = string.Format("data:image/jpg;base64,{0}", imreBase64Data);
+            string imreBase64Data = string.Empty;
+            string imgDataURL = string.Empty;
+
+            if (_qry.tr_asset_images == null)
+                _qry.tr_asset_images = _EmptyImage;
+
+            if (_qry.tr_asset_images.asset_qrcode.Length > 0)
+            {
+                imreBase64Data = Convert.ToBase64String(_qry.tr_asset_images.asset_qrcode);
+                imgDataURL = string.Format("data:image/jpg;base64,{0}", imreBase64Data);
+            }
+
             //Passing image data in viewbag to view  
             ViewBag.ImageData = imgDataURL;
 
